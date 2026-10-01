@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+
+<section class="auth-section">
+
+    <div class="container">
+
+        <div class="row justify-content-center">
+
+            <div class="col-lg-5">
+
+                <div class="auth-card shadow-lg">
+
+                    <div class="text-center mb-4">
+
+                        <img src="{{ url_for('static', filename='images/logo.png') }}"
+                             class="auth-logo">
+
+                        <h2>Welcome Back</h2>
+
+                        <p class="text-muted">
+                            Login to your Fortune Needles account.
+                        </p>
+
+                    </div>
+
+                    <!-- Flash Messages -->
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }} alert-dismissible fade show">
+                                    {{ message }}
+                                    <button type="button"
+                                            class="btn-close"
+                                            data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <form method="POST">
+
+                        <div class="mb-3">
+
+                            <label class="form-label">Username</label>
+
+                            <input
+                                type="text"
+                                name="username"
+                                class="form-control"
+                                placeholder="Enter your username"
+                                required>
+
+                        </div>
+
+                        <div class="mb-4">
+
+                            <label class="form-label">Password</label>
+
+                            <input
+                                type="password"
+                                name="password"
+                                class="form-control"
+                                placeholder="Enter your password"
+                                required>
+
+                        </div>
+
+                        <button
+                            type="submit"
+                            class="btn btn-gold w-100">
+
+                            Login
+
+                        </button>
+
+                    </form>
+
+                    <hr>
+
+                    <p class="text-center">
+
+                        Don't have an account?
+
+                        <a href="{{ url_for('signup') }}">
+                            Create Account
+                        </a>
+
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}

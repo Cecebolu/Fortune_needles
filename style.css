@@ -1,0 +1,635 @@
+/* ==========================================
+   GOOGLE FONTS
+========================================== */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap');
+
+
+/* ==========================================
+   ROOT (LUXURY BRAND COLORS)
+========================================== */
+:root{
+    --gold:#d4af37;
+    --gold-dark:#b8860b;
+
+    --black:#0a0a0a;
+    --white:#ffffff;
+
+    --light:#f8f8f8;
+    --text:#444;
+    --border:#e8e8e8;
+}
+
+
+/* ==========================================
+   GENERAL RESET
+========================================== */
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+html{
+    scroll-behavior:smooth;
+}
+
+body{
+    font-family:'Poppins',sans-serif;
+    background:var(--white);
+    color:var(--text);
+    overflow-x:hidden;
+}
+
+section{
+    padding:90px 0;
+}
+
+h1,h2,h3,h4,h5{
+    font-family:'Playfair Display',serif;
+}
+
+a{
+    text-decoration:none;
+}
+
+
+/* ==========================================
+   NAVBAR (LUXURY DARK GLASS)
+========================================== */
+.navbar{
+    background:rgba(10,10,10,.92);
+    backdrop-filter: blur(12px);
+    padding:15px 0;
+    transition:.3s ease;
+}
+
+.navbar-brand{
+    color:white !important;
+    font-size:26px;
+    font-weight:700;
+}
+
+.navbar-brand img{
+    width:55px;
+    height:55px;
+    object-fit:cover;
+}
+
+.brand-title{
+    color:var(--gold);
+    font-family:'Playfair Display',serif;
+    font-weight:700;
+}
+
+.brand-subtitle{
+    color:#aaa;
+    font-size:12px;
+    letter-spacing:2px;
+}
+
+.nav-link{
+    color:#ddd !important;
+    margin-left:18px;
+    font-weight:500;
+    transition:.3s;
+}
+
+.nav-link:hover,
+.nav-link.active{
+    color:var(--gold) !important;
+}
+
+
+/* ==========================================
+   BUTTONS (GLOBAL GOLD STYLE)
+========================================== */
+.btn-gold{
+    background:linear-gradient(135deg, var(--gold), var(--gold-dark));
+    color:#000;
+    border:none;
+    padding:12px 28px;
+    border-radius:30px;
+    font-weight:600;
+    transition:.3s ease;
+}
+
+.btn-gold:hover{
+    background:#000;
+    color:var(--gold);
+    border:1px solid var(--gold);
+    transform:translateY(-3px);
+    box-shadow:0 10px 25px rgba(212,175,55,.25);
+}
+
+.btn-outline-light{
+    padding:12px 28px;
+    border-radius:30px;
+    border:1px solid #fff;
+    color:#fff;
+    transition:.3s;
+}
+
+.btn-outline-light:hover{
+    background:#fff;
+    color:var(--black);
+}
+
+
+/* ==========================================
+   HERO SECTION
+========================================== */
+.hero{
+    height:100vh;
+    background:
+        linear-gradient(rgba(0,0,0,.65), rgba(0,0,0,.65)),
+        url("../images/hero.jpg");
+
+    background-size:cover;
+    background-position:center;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    color:#fff;
+}
+
+.hero h5{
+    color:var(--gold);
+    letter-spacing:3px;
+    margin-bottom:20px;
+}
+
+.hero h1{
+    font-size:65px;
+    font-weight:700;
+}
+
+.hero p{
+    font-size:20px;
+    margin-top:20px;
+}
+
+
+/* ==========================================
+   SECTION TITLE
+========================================== */
+.section-title{
+    text-align:center;
+    margin-bottom:60px;
+}
+
+.section-title h2{
+    font-size:42px;
+    color:var(--black);
+}
+
+.section-title p{
+    color:#777;
+}
+
+
+/* ==========================================
+   CARDS (GLOBAL STYLE)
+========================================== */
+.card{
+    border:none;
+    border-radius:15px;
+    transition:.3s;
+}
+
+.card:hover{
+    transform:translateY(-8px);
+    box-shadow:0 15px 35px rgba(0,0,0,.08);
+}
+
+
+/* ==========================================
+   SERVICES
+========================================== */
+.services{
+    background:var(--light);
+}
+
+.service-card{
+    background:#fff;
+    padding:45px 25px;
+    text-align:center;
+    border-radius:15px;
+    transition:.3s;
+}
+
+.service-card:hover{
+    transform:translateY(-10px);
+}
+
+
+/* ==========================================
+   GALLERY
+========================================== */
+.gallery-image{
+    overflow:hidden;
+    border-radius:15px;
+}
+
+.gallery-image img{
+    width:100%;
+    transition:.5s;
+}
+
+.gallery-image:hover img{
+    transform:scale(1.08);
+}
+
+
+/* ==========================================
+   AUTH SECTION (LOGIN/SIGNUP)
+========================================== */
+.auth-section{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:120px 15px;
+    background:linear-gradient(135deg,#0a0a0a,#1a1a1a);
+}
+
+.auth-card{
+    background:#fff;
+    border-radius:20px;
+    padding:40px;
+    width:100%;
+    border-top:4px solid var(--gold);
+    box-shadow:0 15px 40px rgba(0,0,0,.1);
+}
+
+.auth-card h2{
+    font-family:'Playfair Display',serif;
+    color:var(--black);
+}
+
+
+/* ==========================================
+   FOOTER
+========================================== */
+.footer{
+    background:var(--black);
+    color:#bbb;
+}
+
+.footer h3,
+.footer h4,
+.footer h5{
+    color:var(--gold);
+    font-family:'Playfair Display',serif;
+}
+
+.footer a{
+    color:#aaa;
+    display:block;
+    margin-bottom:8px;
+    transition:.3s;
+}
+
+.footer a:hover{
+    color:var(--gold);
+    padding-left:5px;
+}
+
+.social-icons a{
+    color:var(--gold);
+    font-size:18px;
+    margin-right:12px;
+    transition:.3s;
+}
+
+.social-icons a:hover{
+    color:#fff;
+}
+
+
+/* ==========================================
+   DASHBOARD
+========================================== */
+.dashboard-section{
+    padding:120px 0;
+    background:#f8f9fc;
+    min-height:100vh;
+}
+
+.dashboard-card{
+    background:#fff;
+    padding:30px;
+    border-radius:15px;
+    text-align:center;
+    transition:.3s;
+}
+
+.dashboard-card:hover{
+    transform:translateY(-8px);
+}
+
+
+/* ==========================================
+   RESPONSIVE
+========================================== */
+@media(max-width:992px){
+    .hero h1{font-size:45px;}
+}
+
+@media(max-width:768px){
+    .hero h1{font-size:32px;}
+    section{padding:60px 0;}
+}
+
+@media(max-width:576px){
+    .btn-gold,
+    .btn-outline-light{
+        width:100%;
+        margin-bottom:10px;
+    }
+
+    .navbar-nav{
+        text-align:center;
+    }
+}
+
+/* =====================================================
+   ADMIN DASHBOARD
+===================================================== */
+
+:root{
+    --admin-black:#111111;
+    --admin-dark:#1b1b1b;
+    --admin-gold:#D4AF37;
+    --admin-light:#f8f8f8;
+    --admin-border:#e6e6e6;
+}
+
+/* Layout */
+
+.admin-wrapper{
+    display:flex;
+    min-height:100vh;
+    background:#f5f5f5;
+}
+
+/* Sidebar */
+
+.admin-sidebar{
+    width:270px;
+    background:var(--admin-black);
+    color:white;
+    position:fixed;
+    top:0;
+    left:0;
+    bottom:0;
+    overflow-y:auto;
+    padding:30px 0;
+    box-shadow:5px 0 20px rgba(0,0,0,.12);
+}
+
+.admin-logo{
+    text-align:center;
+    margin-bottom:40px;
+}
+
+.admin-logo img{
+    width:42px;
+    height:42px;
+    object-fit:cover;
+    border-radius:50%;
+    border:2px solid var(--admin-gold);
+}
+
+.admin-logo h3{
+    color:white;
+    margin-top:15px;
+    font-family:"Playfair Display",serif;
+}
+
+.admin-logo p{
+    color:#cfcfcf;
+    font-size:14px;
+}
+
+/* Sidebar Menu */
+
+.admin-sidebar ul{
+    list-style:none;
+    padding:0;
+    margin:0;
+}
+
+.admin-sidebar li{
+    margin:6px 15px;
+}
+
+.admin-sidebar a{
+    display:flex;
+    align-items:center;
+    gap:15px;
+    color:#d9d9d9;
+    text-decoration:none;
+    padding:14px 18px;
+    border-radius:12px;
+    transition:.3s;
+    font-weight:500;
+}
+
+.admin-sidebar a:hover{
+    background:var(--admin-gold);
+    color:black;
+    transform:translateX(6px);
+}
+
+.admin-sidebar a.active{
+    background:var(--admin-gold);
+    color:black;
+}
+
+.admin-sidebar i{
+    font-size:20px;
+}
+
+/* Main Content */
+
+.admin-content{
+    margin-left:270px;
+    width:100%;
+    padding:40px;
+}
+
+/* Header */
+
+.admin-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:40px;
+}
+
+.admin-header h1{
+    font-family:"Playfair Display",serif;
+    color:#222;
+    font-weight:700;
+}
+
+.admin-user{
+    display:flex;
+    align-items:center;
+    gap:15px;
+}
+
+.admin-user img{
+    width:50px;
+    height:50px;
+    border-radius:50%;
+    border:2px solid var(--admin-gold);
+}
+
+/* Cards */
+
+.dashboard-card{
+    background:white;
+    border:none;
+    border-radius:20px;
+    padding:30px;
+    box-shadow:0 8px 25px rgba(0,0,0,.08);
+    transition:.35s;
+    height:100%;
+}
+
+.dashboard-card:hover{
+    transform:translateY(-8px);
+}
+
+.dashboard-card i{
+    font-size:40px;
+    color:var(--admin-gold);
+    margin-bottom:20px;
+}
+
+.dashboard-card h2{
+    font-size:42px;
+    font-weight:700;
+    color:#111;
+}
+
+.dashboard-card p{
+    color:#777;
+    margin:0;
+    font-weight:500;
+}
+
+/* Tables */
+
+.admin-table{
+    background:white;
+    border-radius:18px;
+    overflow:hidden;
+    box-shadow:0 8px 25px rgba(0,0,0,.08);
+}
+
+.admin-table table{
+    margin:0;
+}
+
+.admin-table th{
+    background:var(--admin-black);
+    color:white;
+    border:none;
+}
+
+.admin-table td{
+    vertical-align:middle;
+}
+
+/* Buttons */
+
+.btn-admin{
+    background:var(--admin-gold);
+    color:black;
+    border:none;
+    padding:10px 24px;
+    border-radius:10px;
+    font-weight:600;
+}
+
+.btn-admin:hover{
+    background:#b98d15;
+    color:white;
+}
+
+/* Statistics */
+
+.stat-icon{
+    width:70px;
+    height:70px;
+    border-radius:50%;
+    background:#fff7df;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    margin:auto;
+}
+
+/* Charts */
+
+.chart-box{
+    background:white;
+    border-radius:20px;
+    padding:25px;
+    box-shadow:0 8px 25px rgba(0,0,0,.08);
+}
+
+/* Responsive */
+
+@media(max-width:991px){
+
+    .admin-sidebar{
+        width:100%;
+        position:relative;
+        height:auto;
+    }
+
+    .admin-content{
+        margin-left:0;
+        padding:25px;
+    }
+
+}
+
+@media(max-width:768px){
+
+    .admin-header{
+        flex-direction:column;
+        text-align:center;
+        gap:20px;
+    }
+
+    .dashboard-card{
+        margin-bottom:20px;
+    }
+
+}
+
+/* ==========================================
+   AUTH LOGO
+========================================== */
+
+.auth-logo{
+    width:120px;
+    height:120px;
+    object-fit:contain;
+    display:block;
+    margin:0 auto 20px;
+}
+
+@media (max-width:768px){
+
+    .auth-logo{
+        width:90px;
+        height:90px;
+    }
+
+}

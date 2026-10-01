@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Design My Outfit{% endblock %}
+
+{% block content %}
+
+<section class="container py-5 mt-5">
+
+    <div class="text-center mb-4">
+        <h1>Design Your Outfit</h1>
+        <p class="lead">Tell us your style and we’ll bring it to life</p>
+    </div>
+
+    <div class="row justify-content-center">
+
+        <div class="col-md-7">
+
+            <form method="POST" class="card shadow-sm p-4 border-0">
+
+                <!-- Outfit Type -->
+                <div class="mb-3">
+                    <label class="form-label">Outfit Type</label>
+                    <select id="outfitType" name="outfit_type" class="form-select" required>
+                        <option value="">Select Outfit</option>
+                        <option value="suit">Suit</option>
+                        <option value="dress">Dress</option>
+                        <option value="kitenge">Kitenge</option>
+                        <option value="casual">Casual Wear</option>
+                    </select>
+                </div>
+
+                <!-- Gender -->
+                <div class="mb-3">
+                    <label class="form-label">Gender</label>
+                    <select name="gender" class="form-select">
+                        <option>Male</option>
+                        <option>Female</option>
+                    </select>
+                </div>
+
+                <!-- Fabric (dynamic) -->
+                <div class="mb-3">
+                    <label class="form-label">Fabric Preference</label>
+                    <select id="fabric" name="fabric" class="form-select"></select>
+                </div>
+
+                <!-- Color -->
+                <div class="mb-3">
+                    <label class="form-label">Color</label>
+                    <input type="text" name="color" class="form-control" placeholder="e.g. Black, Navy Blue">
+                </div>
+
+                <!-- Extra Design Notes -->
+                <div class="mb-3">
+                    <label class="form-label">Design Notes</label>
+                    <textarea name="notes" class="form-control" rows="3"></textarea>
+                </div>
+
+                <button class="btn btn-primary w-100">
+                    Submit Design
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</section>
+
+<!-- ================= REACTIVE SCRIPT ================= -->
+
+<script>
+const outfitType = document.getElementById("outfitType");
+const fabric = document.getElementById("fabric");
+
+const fabricOptions = {
+    suit: ["Wool", "Tweed", "Linen", "Polyester Blend"],
+    dress: ["Silk", "Chiffon", "Cotton", "Satin"],
+    kitenge: ["African Print", "Wax Cotton", "Ankara"],
+    casual: ["Denim", "Cotton", "Jersey"]
+};
+
+outfitType.addEventListener("change", function() {
+
+    const selected = this.value;
+
+    fabric.innerHTML = "";
+
+    if (fabricOptions[selected]) {
+        fabricOptions[selected].forEach(function(item) {
+            let option = document.createElement("option");
+            option.value = item;
+            option.textContent = item;
+            fabric.appendChild(option);
+        });
+    }
+
+});
+</script>
+
+{% endblock %}
