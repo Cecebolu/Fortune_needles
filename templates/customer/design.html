@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}Design My Outfit{% endblock %}
+
+{% block content %}
+
+<section class="container py-5 mt-5">
+
+    <div class="text-center mb-4">
+        <h1>Design Your Outfit</h1>
+        <p class="lead">Tell us your style and we’ll bring it to life</p>
+    </div>
+
+    <div class="row justify-content-center">
+
+        <div class="col-md-7">
+
+            <form method="POST" class="card shadow-sm p-4 border-0">
+
+                <!-- Outfit Type -->
+                <div class="mb-3">
+                    <label class="form-label">Outfit Type</label>
+                    <select id="outfitType" name="outfit_type" class="form-select" required>
+                        <option value="">Select Outfit</option>
+                        <option value="suit">Suit</option>
+                        <option value="dress">Dress</option>
+                        <option value="kitenge">Kitenge</option>
+                        <option value="casual">Casual Wear</option>
+                    </select>
+                </div>
+
+                <!-- Gender -->
+                <div class="mb-3">
+                    <label class="form-label">Gender</label>
+                    <select name="gender" class="form-select">
+                        <option>Male</option>
+                        <option>Female</option>
+                    </select>
+                </div>
+
+                <!-- Fabric (list updates with the outfit type) -->
+                <div class="mb-3">
+                    <label class="form-label">Fabric Preference</label>
+                    <p id="fabricHint" class="small text-muted mb-2">All our fabrics. Choose an outfit type to see the best matches.</p>
+                    <div id="fabricList" class="fabric-list" role="radiogroup" aria-label="Fabric preference"></div>
+                    <input type="text" id="fabricOther" name="fabric_other" class="form-control mt-2 d-none"
+                           maxlength="100" placeholder="Type the fabric you would like">
+                </div>
+
+                <!-- Color -->
+                <div class="mb-3">
+                    <label class="form-label">Color</label>
+                    <input type="text" name="color" class="form-control" placeholder="e.g. Black, Navy Blue">
+                </div>
+
+                <!-- Extra Design Notes -->
+                <div class="mb-3">
+                    <label class="form-label">Design Notes</label>
+                    <textarea name="notes" class="form-control" rows="3"></textarea>
+                </div>
+
+                <button class="btn btn-gold w-100">
+                    Submit Design
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</section>
+
+<!-- ================= REACTIVE SCRIPT ================= -->
+
+<script>
+const outfitType = document.getElementById("outfitType");
+const fabricList = document.getElementById("fabricList");
+const fabricHint = document.getElementById("fabricHint");
+const fabricOther = document.getElementById("fabricOther");
+
+const fabricOptions = {
+    suit: ["Wool", "Tweed", "Linen", "Polyester Blend"],
+    dress: ["Silk", "Chiffon", "Cotton", "Satin"],
+    kitenge: ["African Print", "Wax Cotton", "Ankara"],
+    casual: ["Denim", "Cotton", "Jersey"]
+};
+
+const allFabrics = [...new Set(Object.values(fabricOptions).flat())].sort();
+
+function renderFabrics() {
+    const selected = outfitType.value;
+    const fabrics = fabricOptions[selected] || allFabrics;
+    const previous = (fabricList.querySelector("input:checked") || {}).value;
+
+    fabricHint.textContent = fabricOptions[selected]
+        ? "Recommended for " + outfitType.selectedOptions[0].text.toLowerCase() + ":"
+        : "All our fabrics. Choose an outfit type to see the best matches.";
+
+    fabricList.innerHTML = "";
+
+    fabrics.concat(["Not sure, advise me", "Other"]).forEach(function (name, index) {
+        const id = "fabric" + index;
+        const label = document.createElement("label");
+        label.className = "fabric-chip";
+        label.htmlFor = id;
+
+        const input = document.createElement("input");
+        input.type = "radio";
+        input.name = "fabric";
+        input.id = id;
+        input.value = name;
+        input.checked = name === previous || (!previous && name === "Not sure, advise me");
+
+        const text = document.createElement("span");
+        text.textContent = name;
+
+        label.append(input, text);
+        fabricList.appendChild(label);
+    });
+
+    toggleOther();
+}
+
+function toggleOther() {
+    const isOther = (fabricList.querySelector("input:checked") || {}).value === "Other";
+    fabricOther.classList.toggle("d-none", !isOther);
+    fabricOther.required = isOther;
+}
+
+outfitType.addEventListener("change", renderFabrics);
+fabricList.addEventListener("change", toggleOther);
+renderFabrics();
+</script>
+
+{% endblock %}

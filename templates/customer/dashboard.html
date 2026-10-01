@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+{% from "_status.html" import status_pill %}
+
+{% block title %}My Dashboard<script>
+// Close a banner without reloading the page (the form still works without JavaScript)
+document.querySelectorAll(".js-dismiss").forEach(function (form) {
+    form.addEventListener("submit", function (event) {
+        event.preventDefault();
+        const card = form.closest(".update-card");
+        fetch(form.action, { method: "POST", body: new FormData(form), headers: { "X-Requested-With": "fetch" } })
+            .then(function (response) {
+                if (!response.ok) { form.submit(); return; }
+                card.classList.add("is-closing");
+                setTimeout(function () {
+                    const list = card.parentElement;
+                    card.remove();
+                    if (!list.children.length) list.remove();
+                }, 250);
+            })
+            .catch(function () { form.submit(); });
+    });
+});
+</script>
+
+{% endblock %}
+
+{% block content %}
+
+<section class="container py-5 mt-5">
+
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-5">
+        <div>
+            <h1 class="fw-bold">Welcome, {{ current_user.first_name }}</h1>
+            <p class="text-muted mb-0">Your orders, appointments and design requests</p>
+        </div>
+        <div>
+            <a href="{{ url_for('customer.appointment') }}" class="btn btn-gold me-2">
+                <i class="bi bi-calendar-check me-2"></i>Book Appointment
+            </a>
+            <a href="{{ url_for('customer.design') }}" class="btn btn-outline-dark me-2">
+                <i class="bi bi-scissors me-2"></i>Design My Outfit
+            </a>
+            <a href="{{ url_for('customer.reviews') }}" class="btn btn-outline-dark">
+                <i class="bi bi-star me-2"></i>My Reviews
+            </a>
+        </div>
+    </div>
+
+    {% if alerts %}
+    <div class="customer-updates mb-5">
+
+        {% for alert in alerts %}
+        <div class="update-card update-{{ alert.style }}">
+            <i class="bi {{ alert.icon }}" aria-hidden="true"></i>
+            <div class="flex-grow-1">
+                <strong>{{ alert.title }}</strong>
+                <span>{{ alert.text }}</span>
+                {% if alert.link %}
+                <a href="{{ alert.link }}" class="update-link">{{ alert.link_text }} <i class="bi bi-arrow-right"></i></a>
+                {% endif %}
+            </div>
+            <form method="POST" action="{{ url_for('customer.dismiss_alert') }}" class="js-dismiss">
+                <input type="hidden" name="key" value="{{ alert.key }}">
+                <button class="update-close" title="Dismiss" aria-label="Dismiss: {{ alert.title }}">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </form>
+        </div>
+        {% endfor %}
+
+    </div>
+    {% endif %}
+
+    <h3 class="fw-bold mb-3">My Orders</h3>
+
+    <div class="card shadow-sm border-0 mb-5">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Tracking Code</th>
+                            <th>Items</th>
+                            <th>Total</th>
+                            <th>Payment</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders %}
+                        <tr>
+                            <td>
+                                <strong>{{ order.tracking_code }}</strong>
+                                <small class="text-muted d-block">{{ order.created_at.strftime('%d %b %Y') }}</small>
+                            </td>
+                            <td>
+                                {% for item in order.items %}
+                                {{ item.quantity }} x {{ item.product.name if item.product else "Item" }}{% if not loop.last %}<br>{% endif %}
+                                {% endfor %}
+                            </td>
+                            <td>KES {{ "{:,.0f}".format(order.total or 0) }}</td>
+                            <td>{{ status_pill(order.payment_status) }}</td>
+                            <td>{{ status_pill(order.order_status) }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">
+                                No orders yet. <a href="{{ url_for('public.shop') }}">Visit the shop</a>.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <h3 class="fw-bold mb-3">My Appointments</h3>
+
+    <div class="card shadow-sm border-0 mb-5">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Service</th>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for appointment in appointments %}
+                        <tr class="row-status-{{ appointment.status|lower }}">
+                            <td><strong>{{ appointment.service }}</strong></td>
+                            <td>{{ appointment.appointment_date.strftime('%d %b %Y') }}</td>
+                            <td>{{ appointment.appointment_time.strftime('%I:%M %p') }}</td>
+                            <td>{{ status_pill(appointment.status) }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-4">
+                                You have no appointments yet.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <h3 class="fw-bold mb-3">My Design Requests</h3>
+
+    <div class="row g-4">
+        {% for design in designs %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <h5 class="fw-bold text-capitalize">{{ design.clothing_type }}</h5>
+                    <p class="mb-1"><strong>Fabric:</strong> {{ design.fabric or "-" }}</p>
+                    <p class="mb-1"><strong>Color:</strong> {{ design.color or "-" }}</p>
+                    <p class="mb-1"><strong>Submitted:</strong> {{ design.created_at.strftime('%d %b %Y') }}</p>
+                    {% if design.estimated_price %}
+                    <p class="mb-1"><strong>Quote:</strong> KES {{ "{:,.0f}".format(design.estimated_price) }}</p>
+                    {% endif %}
+                    {% if design.expected_completion %}
+                    <p class="mb-1"><strong>Ready by:</strong> {{ design.expected_completion.strftime('%d %b %Y') }}</p>
+                    {% endif %}
+                    <div class="mt-3">{{ status_pill(design.status) }}</div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12 text-muted">You have not submitted any designs yet.</div>
+        {% endfor %}
+    </div>
+
+</section>
+
+<script>
+// Close a banner without reloading the page (the form still works without JavaScript)
+document.querySelectorAll(".js-dismiss").forEach(function (form) {
+    form.addEventListener("submit", function (event) {
+        event.preventDefault();
+        const card = form.closest(".update-card");
+        fetch(form.action, { method: "POST", body: new FormData(form), headers: { "X-Requested-With": "fetch" } })
+            .then(function (response) {
+                if (!response.ok) { form.submit(); return; }
+                card.classList.add("is-closing");
+                setTimeout(function () {
+                    const list = card.parentElement;
+                    card.remove();
+                    if (!list.children.length) list.remove();
+                }, 250);
+            })
+            .catch(function () { form.submit(); });
+    });
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% from "_stars.html" import stars, star_input %}
+
+{% block title %}My Reviews{% endblock %}
+
+{% macro review_form(prefix, product_id=None, review=None, button="Submit Review") %}
+<form method="POST" action="{{ url_for('customer.reviews') }}" class="review-form">
+    {% if product_id %}<input type="hidden" name="product_id" value="{{ product_id }}">{% endif %}
+    {{ star_input(prefix, review.rating if review else 0) }}
+    <textarea name="comment" class="form-control my-3" rows="3" maxlength="1000"
+              placeholder="Tell us what you liked, or what we could do better (optional)">{{ review.comment if review and review.comment else '' }}</textarea>
+    <div class="d-flex gap-2">
+        <button class="btn btn-gold">{{ button }}</button>
+        {% if review %}
+        <a href="{{ url_for('customer.reviews') }}" class="btn btn-outline-dark">Cancel</a>
+        {% endif %}
+    </div>
+</form>
+{% endmacro %}
+
+{% block content %}
+
+<section class="container py-5 mt-5">
+
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-5">
+        <div>
+            <h1 class="fw-bold">My Reviews</h1>
+            <p class="text-muted mb-0">Your feedback helps us improve and helps other customers choose.</p>
+        </div>
+        <a href="{{ url_for('customer.dashboard') }}" class="btn btn-outline-dark">
+            <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+        </a>
+    </div>
+
+    <div class="row g-4">
+
+        <div class="col-lg-7">
+
+            <!-- Products waiting for a review -->
+            <h4 class="fw-bold mb-3">Rate Your Purchases</h4>
+
+            {% for product in to_review %}
+            <div class="review-card mb-3">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    {% if product.image %}
+                    <img src="{{ url_for('static', filename='uploads/products/' + product.image) }}" alt="{{ product.name }}" class="review-thumb">
+                    {% else %}
+                    <span class="review-thumb review-thumb-icon"><i class="bi bi-bag"></i></span>
+                    {% endif %}
+                    <div>
+                        <h5 class="fw-bold mb-0">{{ product.name }}</h5>
+                        <small class="text-muted">How would you rate it?</small>
+                    </div>
+                </div>
+                {{ review_form("p" ~ product.id, product.id) }}
+            </div>
+            {% else %}
+            <div class="review-card text-muted mb-3">
+                <i class="bi bi-bag-check me-2"></i>
+                {% if my_reviews|selectattr("product_id")|list %}
+                You have reviewed everything you ordered. Thank you!
+                {% else %}
+                Products you order from the <a href="{{ url_for('public.shop') }}">shop</a> will appear here for you to rate.
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            <!-- Service review -->
+            <h4 class="fw-bold mt-5 mb-3">Rate Our Service</h4>
+
+            <div class="review-card">
+                {% if general_review and editing != general_review.id %}
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        {{ stars(general_review.rating, "stars-lg") }}
+                        <p class="mt-2 mb-0">{{ general_review.comment or "No comment" }}</p>
+                    </div>
+                    <a href="{{ url_for('customer.reviews', edit=general_review.id) }}" class="btn btn-sm btn-outline-dark">
+                        <i class="bi bi-pencil"></i> Edit
+                    </a>
+                </div>
+                {% else %}
+                <p class="text-muted mb-3">How was your experience with Fortune Needles: fittings, tailoring, delivery?</p>
+                {{ review_form("general", None, general_review, "Save Review" if general_review else "Submit Review") }}
+                {% endif %}
+            </div>
+
+        </div>
+
+        <!-- Reviews already written -->
+        <div class="col-lg-5">
+
+            <h4 class="fw-bold mb-3">Reviews You've Written</h4>
+
+            {% for review in my_reviews if review.product_id %}
+            <div class="review-card mb-3">
+                {% if editing == review.id %}
+                <h6 class="fw-bold mb-2">{{ review.product.name if review.product else "Product" }}</h6>
+                {{ review_form("e" ~ review.id, review.product_id, review, "Save Changes") }}
+                {% else %}
+                <div class="d-flex justify-content-between align-items-start gap-2">
+                    <div>
+                        <h6 class="fw-bold mb-1">{{ review.product.name if review.product else "Product" }}</h6>
+                        {{ stars(review.rating) }}
+                        <small class="text-muted ms-1">{{ review.created_at.strftime('%d %b %Y') }}</small>
+                    </div>
+                    <div class="d-flex gap-1">
+                        <a href="{{ url_for('customer.reviews', edit=review.id) }}" class="btn btn-sm btn-outline-dark" title="Edit review">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <form method="POST" action="{{ url_for('customer.delete_review', review_id=review.id) }}"
+                              onsubmit="return confirm('Delete this review?');">
+                            <button class="btn btn-sm btn-outline-danger" title="Delete review"><i class="bi bi-trash"></i></button>
+                        </form>
+                    </div>
+                </div>
+                {% if review.comment %}<p class="mt-2 mb-0">{{ review.comment }}</p>{% endif %}
+                {% endif %}
+            </div>
+            {% else %}
+            <p class="text-muted">You haven't reviewed any products yet.</p>
+            {% endfor %}
+
+            {% if general_review %}
+            <form method="POST" action="{{ url_for('customer.delete_review', review_id=general_review.id) }}"
+                  onsubmit="return confirm('Delete your service review?');" class="mt-2">
+                <button class="btn btn-link btn-sm text-danger p-0">Delete my service review</button>
+            </form>
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}

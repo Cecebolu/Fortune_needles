@@ -1,0 +1,133 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+
+<!-- Header -->
+<div class="admin-header">
+    <div>
+        <h1>Welcome, {{ current_user.first_name }}</h1>
+        <p class="text-muted mb-0">Here is what's happening at Fortune Needles.</p>
+    </div>
+</div>
+
+<!-- Statistics -->
+<div class="row g-4 mb-5">
+
+    {% for value, label, icon, endpoint in [
+        (total_customers, "Customers", "bi-people-fill", "admin.admin_customers"),
+        (total_appointments, "Appointments", "bi-calendar-check-fill", "admin.admin_appointments"),
+        (total_designs, "Design Requests", "bi-scissors", "admin.admin_designs"),
+        (total_products, "Products", "bi-bag-fill", "admin.admin_products"),
+    ] %}
+    <div class="col-sm-6 col-xl-3">
+        <a href="{{ url_for(endpoint) }}" class="stat-card">
+            <div class="stat-icon"><i class="bi {{ icon }}"></i></div>
+            <div>
+                <h2>{{ value }}</h2>
+                <p>{{ label }}</p>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+
+</div>
+
+<!-- Quick Actions -->
+<h4 class="admin-section-title">Quick Actions</h4>
+
+<div class="row g-3 mb-5">
+    <div class="col-sm-6 col-xl-3">
+        <a href="{{ url_for('admin.add_product') }}" class="quick-action">
+            <i class="bi bi-plus-circle"></i> Add Product
+        </a>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <a href="{{ url_for('admin.add_gallery') }}" class="quick-action">
+            <i class="bi bi-image"></i> Upload Gallery Image
+        </a>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <a href="{{ url_for('admin.admin_about') }}" class="quick-action">
+            <i class="bi bi-pencil-square"></i> Edit About Page
+        </a>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <a href="{{ url_for('admin.admin_appointments') }}" class="quick-action">
+            <i class="bi bi-calendar-week"></i> View Appointments
+        </a>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row g-4">
+
+    <div class="col-xl-7">
+        <div class="admin-panel h-100">
+            <div class="admin-panel-header">
+                <h5>Upcoming Appointments</h5>
+                <a href="{{ url_for('admin.admin_appointments') }}">View all</a>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Customer</th>
+                            <th>Service</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for appointment in recent_appointments %}
+                        <tr>
+                            <td>{{ appointment.customer.first_name }} {{ appointment.customer.last_name }}</td>
+                            <td>{{ appointment.service }}</td>
+                            <td>
+                                {{ appointment.appointment_date.strftime('%d %b') }},
+                                {{ appointment.appointment_time.strftime('%I:%M %p') }}
+                            </td>
+                            <td><span class="badge text-bg-warning">{{ appointment.status }}</span></td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-4">No upcoming appointments.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-5">
+        <div class="admin-panel h-100">
+            <div class="admin-panel-header">
+                <h5>Latest Design Requests</h5>
+                <a href="{{ url_for('admin.admin_designs') }}">View all</a>
+            </div>
+
+            <ul class="list-unstyled mb-0">
+                {% for design in recent_designs %}
+                <li class="admin-list-item">
+                    <div>
+                        <strong class="text-capitalize">{{ design.clothing_type }}</strong>
+                        <small class="text-muted d-block">
+                            {{ design.customer.first_name }} {{ design.customer.last_name }}
+                            &middot; {{ design.fabric or "Any fabric" }}
+                        </small>
+                    </div>
+                    <span class="badge text-bg-secondary">{{ design.status }}</span>
+                </li>
+                {% else %}
+                <li class="text-center text-muted py-4">No design requests yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

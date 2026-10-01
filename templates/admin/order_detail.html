@@ -1,0 +1,120 @@
+{% extends "admin/admin_base.html" %}
+{% from "admin/_macros.html" import page_header, status_badge, money %}
+
+{% block title %}Order {{ order.tracking_code }}{% endblock %}
+
+{% block content %}
+
+{% call page_header("Order " ~ order.tracking_code, "Placed on " ~ order.created_at.strftime('%d %B %Y')) %}
+<a href="{{ url_for('admin.admin_orders') }}" class="btn btn-outline-dark">
+    <i class="bi bi-arrow-left me-1"></i> Back to Orders
+</a>
+{% endcall %}
+
+<div class="row g-4">
+
+    <div class="col-xl-8">
+
+        <div class="admin-panel mb-4">
+            <div class="admin-panel-header">
+                <h5>Items</h5>
+                <span>{{ status_badge(order.order_status) }} {{ status_badge(order.payment_status) }}</span>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th class="text-end">Price</th>
+                            <th class="text-end">Qty</th>
+                            <th class="text-end">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in order.items %}
+                        <tr>
+                            <td>{{ item.product.name if item.product else "Deleted product" }}</td>
+                            <td class="text-end">{{ money(item.price) }}</td>
+                            <td class="text-end">{{ item.quantity }}</td>
+                            <td class="text-end">{{ money(item.subtotal) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th colspan="3" class="text-end">Total</th>
+                            <th class="text-end fs-5 text-dark">{{ money(order.total) }}</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        <div class="admin-panel">
+            <h5 class="fw-bold mb-3">Customer</h5>
+            <p class="mb-1">
+                <a href="{{ url_for('admin.customer_detail', user_id=order.customer.id) }}" class="fw-semibold text-dark">
+                    {{ order.customer.first_name }} {{ order.customer.last_name }}
+                </a>
+            </p>
+            <p class="mb-1 text-muted"><i class="bi bi-telephone me-2"></i>{{ order.customer.phone }}</p>
+            <p class="mb-0 text-muted"><i class="bi bi-envelope me-2"></i>{{ order.customer.email }}</p>
+        </div>
+
+    </div>
+
+    <div class="col-xl-4">
+
+        <form method="POST" class="admin-panel mb-4">
+
+            <h5 class="fw-bold mb-3">Update Order</h5>
+
+            <div class="mb-3">
+                <label class="form-label">Order status</label>
+                <select name="order_status" class="form-select" {% if order.order_status == "Cancelled" %}disabled{% endif %}>
+                    {% for option in statuses %}
+                    <option value="{{ option }}" {% if option == order.order_status %}selected{% endif %}>{{ option }}</option>
+                    {% endfor %}
+                </select>
+                {% if order.order_status == "Cancelled" %}
+                <input type="hidden" name="order_status" value="Cancelled">
+                <small class="text-muted">Cancelled orders cannot be reopened.</small>
+                {% else %}
+                <small class="text-muted">Cancelling returns the items to stock.</small>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Payment</label>
+                <select name="payment_status" class="form-select">
+                    {% for option in payment_statuses %}
+                    <option value="{{ option }}" {% if option == order.payment_status %}selected{% endif %}>{{ option }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label">Delivery date</label>
+                <input type="date" name="delivery_date" class="form-control"
+                       value="{{ order.delivery_date.isoformat() if order.delivery_date else '' }}">
+            </div>
+
+            <button class="btn btn-admin w-100">Save Changes</button>
+
+        </form>
+
+        {% if order.order_status == "Cancelled" %}
+        <form method="POST" action="{{ url_for('admin.delete_order', order_id=order.id) }}"
+              onsubmit="return confirm('Delete this order permanently?');">
+            <button class="btn btn-outline-danger w-100">
+                <i class="bi bi-trash me-1"></i> Delete Order
+            </button>
+        </form>
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% endblock %}

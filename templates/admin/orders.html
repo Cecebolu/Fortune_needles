@@ -1,0 +1,69 @@
+{% extends "admin/admin_base.html" %}
+{% from "admin/_macros.html" import page_header, status_badge, filter_tabs, money, empty_row %}
+
+{% block title %}Orders{% endblock %}
+
+{% block content %}
+
+{% call page_header("Orders", "Track tailoring and shop orders from received to delivered.") %}
+<a href="{{ url_for('admin.add_order') }}" class="btn btn-admin">
+    <i class="bi bi-plus-circle me-1"></i> New Order
+</a>
+{% endcall %}
+
+<div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+    {{ filter_tabs("admin.admin_orders", statuses, status, keep={"q": search} if search else {}) }}
+
+    <form method="GET" class="admin-search">
+        {% if status %}<input type="hidden" name="status" value="{{ status }}">{% endif %}
+        <i class="bi bi-search"></i>
+        <input type="text" name="q" value="{{ search }}" class="form-control" placeholder="Tracking code, name or phone">
+    </form>
+</div>
+
+<div class="admin-panel">
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Tracking Code</th>
+                    <th>Customer</th>
+                    <th>Items</th>
+                    <th>Total</th>
+                    <th>Payment</th>
+                    <th>Status</th>
+                    <th>Delivery</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td>
+                        <strong>{{ order.tracking_code }}</strong>
+                        <small class="text-muted d-block">{{ order.created_at.strftime('%d %b %Y') }}</small>
+                    </td>
+                    <td>
+                        {{ order.customer.first_name }} {{ order.customer.last_name }}
+                        <small class="text-muted d-block">{{ order.customer.phone }}</small>
+                    </td>
+                    <td>{{ order.items|sum(attribute='quantity') }}</td>
+                    <td>{{ money(order.total) }}</td>
+                    <td>{{ status_badge(order.payment_status) }}</td>
+                    <td>{{ status_badge(order.order_status) }}</td>
+                    <td>{{ order.delivery_date.strftime('%d %b %Y') if order.delivery_date else "—" }}</td>
+                    <td class="text-end">
+                        <a href="{{ url_for('admin.order_detail', order_id=order.id) }}" class="btn btn-sm btn-outline-dark">
+                            Open
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                {{ empty_row(8, "No orders found." if (status or search) else "No orders yet. Click New Order to record one.") }}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

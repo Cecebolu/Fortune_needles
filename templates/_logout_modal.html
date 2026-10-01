@@ -1,0 +1,16 @@
+{# Logout confirmation, used by both the public site and the admin panel #}
+<div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content logout-modal">
+            <div class="modal-body text-center p-4">
+                <span class="logout-icon"><i class="bi bi-box-arrow-right"></i></span>
+                <h5 class="fw-bold mt-3 mb-2" id="logoutModalTitle">Log out?</h5>
+                <p class="text-muted mb-4">Are you sure you want to log out of your account?</p>
+                <form method="POST" action="{{ url_for('auth.logout') }}" class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-dark flex-fill" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger flex-fill">Log Out</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,183 @@
+{% extends "admin/admin_base.html" %}
+{% from "admin/_macros.html" import page_header, status_badge, money %}
+
+{% block title %}{{ customer.first_name }} {{ customer.last_name }}{% endblock %}
+
+{% block content %}
+
+{% call page_header(customer.first_name ~ " " ~ customer.last_name, "Customer since " ~ customer.created_at.strftime('%d %B %Y')) %}
+<a href="{{ url_for('admin.add_order', customer=customer.id) }}" class="btn btn-admin">
+    <i class="bi bi-plus-circle me-1"></i> New Order
+</a>
+<a href="{{ url_for('admin.admin_customers') }}" class="btn btn-outline-dark">
+    <i class="bi bi-arrow-left me-1"></i> All Customers
+</a>
+{% endcall %}
+
+<div class="row g-4">
+
+    <!-- Profile + measurements -->
+    <div class="col-xl-4">
+
+        <div class="admin-panel mb-4">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <span class="avatar avatar-lg">{{ customer.first_name[:1] }}{{ customer.last_name[:1] }}</span>
+                <div>
+                    <h5 class="mb-0 fw-bold">{{ customer.first_name }} {{ customer.last_name }}</h5>
+                    <small class="text-muted">@{{ customer.username }}</small>
+                </div>
+            </div>
+            <p class="mb-2"><i class="bi bi-telephone me-2 text-muted"></i>{{ customer.phone }}</p>
+            <p class="mb-3"><i class="bi bi-envelope me-2 text-muted"></i>{{ customer.email }}</p>
+            <div class="row text-center g-2">
+                <div class="col-4"><div class="mini-stat"><strong>{{ customer.appointments|length }}</strong><small>Bookings</small></div></div>
+                <div class="col-4"><div class="mini-stat"><strong>{{ customer.orders|length }}</strong><small>Orders</small></div></div>
+                <div class="col-4"><div class="mini-stat"><strong>{{ "{:,.0f}".format(total_spent) }}</strong><small>KES paid</small></div></div>
+            </div>
+        </div>
+
+        <form method="POST" action="{{ url_for('admin.save_measurements', user_id=customer.id) }}" class="admin-panel">
+            <div class="admin-panel-header">
+                <h5>Measurements <small class="text-muted fw-normal">(inches)</small></h5>
+                {% if customer.measurements and customer.measurements.updated_at %}
+                <small class="text-muted">Updated {{ customer.measurements.updated_at.strftime('%d %b %Y') }}</small>
+                {% endif %}
+            </div>
+            <div class="row g-2 mb-3">
+                {% for field, label in fields %}
+                <div class="col-6">
+                    <label class="form-label small mb-1">{{ label }}</label>
+                    <input type="number" step="0.1" min="0" name="{{ field }}" class="form-control form-control-sm"
+                           value="{{ customer.measurements[field] if customer.measurements and customer.measurements[field] is not none else '' }}">
+                </div>
+                {% endfor %}
+            </div>
+            <button class="btn btn-admin w-100">Save Measurements</button>
+        </form>
+
+        <div class="admin-panel mt-4" id="password-reset">
+            <h5 class="fw-bold mb-1"><i class="bi bi-key me-2"></i>Password Reset</h5>
+            <p class="text-muted small mb-3">
+                If {{ customer.first_name }} forgot their password, create a reset link and send it to them.
+                It works for {{ reset_hours }} hours and only once.
+            </p>
+
+            {% if reset_link %}
+            <label class="form-label small mb-1" for="resetLink">Reset link</label>
+            <div class="input-group mb-2">
+                <input type="text" id="resetLink" class="form-control form-control-sm reset-link-box" value="{{ reset_link }}" readonly>
+                <button type="button" class="btn btn-sm btn-outline-dark" id="copyResetLink">
+                    <i class="bi bi-clipboard me-1"></i>Copy
+                </button>
+            </div>
+            {% if reset_whatsapp_url %}
+            <a href="{{ reset_whatsapp_url }}" target="_blank" rel="noopener" class="btn btn-whatsapp btn-sm w-100 mb-2">
+                <i class="bi bi-whatsapp me-1"></i> Send on WhatsApp to {{ customer.phone }}
+            </a>
+            {% endif %}
+            <a href="mailto:{{ customer.email }}?subject={{ 'Reset your Fortune Needles password'|urlencode }}&body={{ ('Hello ' ~ customer.first_name ~ ', use this link to reset your password: ' ~ reset_link)|urlencode }}"
+               class="btn btn-outline-dark btn-sm w-100">
+                <i class="bi bi-envelope me-1"></i> Send by Email
+            </a>
+            {% else %}
+            <form method="POST" action="{{ url_for('admin.create_reset_link', user_id=customer.id) }}">
+                <button class="btn btn-outline-dark w-100"><i class="bi bi-link-45deg me-1"></i> Create Reset Link</button>
+            </form>
+            {% endif %}
+        </div>
+
+    </div>
+
+    <!-- Activity -->
+    <div class="col-xl-8">
+
+        <div class="admin-panel mb-4">
+            <div class="admin-panel-header">
+                <h5>Orders</h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead><tr><th>Tracking</th><th>Date</th><th>Total</th><th>Payment</th><th>Status</th></tr></thead>
+                    <tbody>
+                        {% for order in customer.orders|sort(attribute='created_at', reverse=true) %}
+                        <tr>
+                            <td><a href="{{ url_for('admin.order_detail', order_id=order.id) }}" class="fw-semibold">{{ order.tracking_code }}</a></td>
+                            <td>{{ order.created_at.strftime('%d %b %Y') }}</td>
+                            <td>{{ money(order.total) }}</td>
+                            <td>{{ status_badge(order.payment_status) }}</td>
+                            <td>{{ status_badge(order.order_status) }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="5" class="text-muted text-center py-3">No orders yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="admin-panel mb-4">
+            <div class="admin-panel-header">
+                <h5>Appointments</h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead><tr><th>Service</th><th>Date</th><th>Notes</th><th>Status</th></tr></thead>
+                    <tbody>
+                        {% for appointment in customer.appointments|sort(attribute='appointment_date', reverse=true) %}
+                        <tr>
+                            <td>{{ appointment.service }}</td>
+                            <td>{{ appointment.appointment_date.strftime('%d %b %Y') }}, {{ appointment.appointment_time.strftime('%I:%M %p') }}</td>
+                            <td class="text-muted">{{ appointment.notes or "—" }}</td>
+                            <td>{{ status_badge(appointment.status) }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="4" class="text-muted text-center py-3">No appointments yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="admin-panel">
+            <div class="admin-panel-header">
+                <h5>Design Requests</h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead><tr><th>Outfit</th><th>Fabric / Colour</th><th>Quote</th><th>Status</th></tr></thead>
+                    <tbody>
+                        {% for design in customer.custom_designs|sort(attribute='created_at', reverse=true) %}
+                        <tr>
+                            <td class="text-capitalize">{{ design.clothing_type }}</td>
+                            <td>{{ design.fabric or "—" }} / {{ design.color or "—" }}</td>
+                            <td>{{ money(design.estimated_price) if design.estimated_price else "—" }}</td>
+                            <td>{{ status_badge(design.status) }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="4" class="text-muted text-center py-3">No design requests yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+const copyButton = document.getElementById("copyResetLink");
+if (copyButton) {
+    copyButton.addEventListener("click", function () {
+        const input = document.getElementById("resetLink");
+        input.select();
+        (navigator.clipboard ? navigator.clipboard.writeText(input.value) : Promise.reject())
+            .catch(function () { document.execCommand("copy"); })
+            .finally(function () {
+                copyButton.innerHTML = '<i class="bi bi-check2 me-1"></i>Copied';
+            });
+    });
+}
+</script>
+
+{% endblock %}

@@ -1,4 +1,6 @@
 from flask import Flask
+from sqlalchemy import inspect, text
+
 from config import Config
 from extensions import db, login_manager, migrate
 
@@ -6,8 +8,9 @@ from routes.public import public_bp
 from routes.auth import auth_bp
 from routes.customer import customer_bp
 from routes.admin import admin_bp
+from routes.cart import cart_bp, cart_count
 
-from models import User
+from models import User, SiteSettings
 
 
 def create_app():
@@ -19,27 +22,45 @@ def create_app():
     login_manager.init_app(app)
     migrate.init_app(app, db)
 
-    login_manager.login_view = "auth.login"
-    login_manager.login_message = "Please login to continue."
-
     app.register_blueprint(public_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(customer_bp)
     app.register_blueprint(admin_bp)
+    app.register_blueprint(cart_bp)
+
+    @app.context_processor
+    def inject_site_settings():
+        return {"site": SiteSettings.get(), "cart_count": cart_count()}
 
     return app
 
 
-@login_manager.user_loader
-def load_user(user_id):
-    return db.session.get(User, int(user_id))
-
-
 app = create_app()
+
+def add_missing_columns():
+    """create_all() only creates new tables, so add columns introduced after a table already existed."""
+
+    new_columns = {
+        "site_settings": {"order_whatsapp": "VARCHAR(30)"},
+    }
+
+    inspector = inspect(db.engine)
+
+    for table, columns in new_columns.items():
+        existing = {column["name"] for column in inspector.get_columns(table)}
+
+        for name, sql_type in columns.items():
+            if name not in existing:
+                db.session.execute(text(f"ALTER TABLE {table} ADD COLUMN {name} {sql_type}"))
+                print(f"Added column {table}.{name}")
+
+    db.session.commit()
+
 
 with app.app_context():
 
     db.create_all()
+    add_missing_columns()
 
     if not User.query.filter_by(username="admin").first():
 
@@ -57,7 +78,7 @@ with app.app_context():
         db.session.add(admin)
         db.session.commit()
 
-        print("✓ Admin account created")
+        print("Admin account created")
 
 
 if __name__ == "__main__":

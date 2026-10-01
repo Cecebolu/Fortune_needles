@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Send Your Order{% endblock %}
+
+{% block content %}
+
+<section class="container py-5 mt-5">
+
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+
+            <div class="cart-panel text-center p-5">
+
+                <span class="order-sent-icon"><i class="bi bi-check-lg"></i></span>
+
+                <h2 class="fw-bold mt-4">Order {{ order.tracking_code }} saved</h2>
+
+                {% if whatsapp_url %}
+                <p class="text-muted mb-4">
+                    One last step: send it to us on WhatsApp so we can confirm payment and delivery.
+                    WhatsApp is opening with your order filled in. Just press <strong>Send</strong>.
+                </p>
+
+                <a href="{{ whatsapp_url }}" class="btn btn-whatsapp btn-lg w-100 mb-3" id="whatsappLink" target="_blank" rel="noopener">
+                    <i class="bi bi-whatsapp me-2"></i>Open WhatsApp to Send Order
+                </a>
+                {% else %}
+                <p class="text-muted mb-4">We have received your order and will contact you about payment and delivery.</p>
+                {% endif %}
+
+                <div class="text-start order-sent-summary">
+                    {% for item in order.items %}
+                    <div class="d-flex justify-content-between small mb-2">
+                        <span>{{ item.quantity }} x {{ item.product.name }}</span>
+                        <span>KES {{ "{:,.0f}".format(item.subtotal) }}</span>
+                    </div>
+                    {% endfor %}
+                    <hr class="my-2">
+                    <div class="d-flex justify-content-between fw-bold">
+                        <span>Total</span>
+                        <span>KES {{ "{:,.0f}".format(order.total) }}</span>
+                    </div>
+                </div>
+
+                <a href="{{ url_for('customer.dashboard') }}" class="btn btn-outline-dark mt-4">
+                    View My Orders
+                </a>
+
+            </div>
+
+        </div>
+    </div>
+
+</section>
+
+{% if whatsapp_url %}
+<script>
+// Open WhatsApp automatically; the button stays as a fallback if the browser blocks it.
+setTimeout(function () {
+    window.location.href = document.getElementById("whatsappLink").href;
+}, 1200);
+</script>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,83 @@
+{% extends "admin/admin_base.html" %}
+{% from "admin/_macros.html" import page_header, status_badge, empty_row %}
+
+{% block title %}Appointments{% endblock %}
+
+{% block content %}
+
+{{ page_header("Appointments", "Confirm, complete or cancel customer bookings.") }}
+
+<div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+
+    <ul class="nav admin-tabs">
+        {% for key, label in [("upcoming", "Upcoming"), ("past", "Past"), ("all", "All dates")] %}
+        <li class="nav-item">
+            <a class="nav-link {% if when == key %}active{% endif %}"
+               href="{{ url_for('admin.admin_appointments', when=key, status=status) }}">{{ label }}</a>
+        </li>
+        {% endfor %}
+    </ul>
+
+    <form method="GET" class="d-flex gap-2">
+        <input type="hidden" name="when" value="{{ when }}">
+        <select name="status" class="form-select" onchange="this.form.submit()">
+            <option value="">All statuses</option>
+            {% for option in statuses %}
+            <option value="{{ option }}" {% if option == status %}selected{% endif %}>{{ option }}</option>
+            {% endfor %}
+        </select>
+    </form>
+
+</div>
+
+<div class="admin-panel">
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Date &amp; Time</th>
+                    <th>Customer</th>
+                    <th>Service</th>
+                    <th>Notes</th>
+                    <th>Status</th>
+                    <th style="width:180px">Change status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for appointment in appointments %}
+                <tr>
+                    <td>
+                        <strong>{{ appointment.appointment_date.strftime('%a %d %b %Y') }}</strong>
+                        <small class="text-muted d-block">
+                            {{ appointment.appointment_time.strftime('%I:%M %p') }}
+                            {% if appointment.appointment_date == today %}<span class="badge text-bg-dark ms-1">Today</span>{% endif %}
+                        </small>
+                    </td>
+                    <td>
+                        <a href="{{ url_for('admin.customer_detail', user_id=appointment.customer.id) }}" class="text-dark fw-semibold">
+                            {{ appointment.customer.first_name }} {{ appointment.customer.last_name }}
+                        </a>
+                        <small class="text-muted d-block">{{ appointment.phone or appointment.customer.phone }}</small>
+                    </td>
+                    <td>{{ appointment.service }}</td>
+                    <td class="text-muted" style="max-width:240px">{{ appointment.notes or "—" }}</td>
+                    <td>{{ status_badge(appointment.status) }}</td>
+                    <td>
+                        <form method="POST" action="{{ url_for('admin.update_appointment', appointment_id=appointment.id) }}">
+                            <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                                {% for option in statuses %}
+                                <option value="{{ option }}" {% if option == appointment.status %}selected{% endif %}>{{ option }}</option>
+                                {% endfor %}
+                            </select>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                {{ empty_row(6, "No appointments found.") }}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

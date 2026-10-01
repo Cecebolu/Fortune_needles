@@ -9,7 +9,7 @@ from extensions import db, login_manager
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    return db.session.get(User, int(user_id))
 
 
 # =====================================================
@@ -147,6 +147,24 @@ class Product(db.Model):
         backref="product",
         lazy=True
     )
+
+    LOW_STOCK = 3
+
+    @property
+    def in_stock(self):
+        return (self.stock or 0) > 0
+
+    @property
+    def stock_status(self):
+        """(label, colour) shown to the admin. `is_available` only means "show in shop"."""
+
+        if not self.is_available:
+            return ("Hidden", "secondary")
+        if not self.in_stock:
+            return ("Out of Stock", "danger")
+        if self.stock <= self.LOW_STOCK:
+            return ("Low Stock", "warning")
+        return ("In Stock", "success")
 
     def __repr__(self):
         return f"<Product {self.name}>"
@@ -363,6 +381,17 @@ class Order(db.Model):
         cascade="all, delete-orphan"
     )
 
+    @classmethod
+    def new_tracking_code(cls):
+        import random
+        import string
+
+        while True:
+            code = "FN-" + "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
+
+            if not cls.query.filter_by(tracking_code=code).first():
+                return code
+
     def __repr__(self):
         return f"<Order {self.id}>"
 
@@ -511,3 +540,238 @@ class ChatMessage(db.Model):
 
     def __repr__(self):
         return f"<ChatMessage {self.id}>"
+
+# =====================================================
+# ABOUT PAGE CONTENT
+# =====================================================
+
+class AboutPage(db.Model):
+    __tablename__ = "about_page"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    title = db.Column(
+        db.String(150),
+        default="About Fortune Needles"
+    )
+
+    subtitle = db.Column(
+        db.String(255),
+        default="Crafting elegance through custom tailoring."
+    )
+
+    description = db.Column(
+        db.Text,
+        default=(
+            "Fortune Needles is a tailoring house in Nakuru, Kenya. "
+            "We make custom suits, dresses, kitenge and bridal wear, "
+            "and offer alterations that give every garment a perfect fit."
+        )
+    )
+
+    updated_at = db.Column(
+        db.DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow
+    )
+
+    @classmethod
+    def get(cls):
+        about = cls.query.first()
+
+        if about is None:
+            about = cls()
+            db.session.add(about)
+            db.session.commit()
+
+        return about
+
+    def __repr__(self):
+        return f"<AboutPage {self.title}>"
+
+
+# =====================================================
+# SERVICES
+# =====================================================
+
+class Service(db.Model):
+    __tablename__ = "services"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    name = db.Column(db.String(150), nullable=False)
+
+    description = db.Column(db.Text)
+
+    icon = db.Column(
+        db.String(50),
+        default="bi-scissors"
+    )
+
+    starting_price = db.Column(db.Float)
+
+    is_active = db.Column(
+        db.Boolean,
+        default=True
+    )
+
+    position = db.Column(
+        db.Integer,
+        default=0
+    )
+
+    created_at = db.Column(
+        db.DateTime,
+        default=datetime.utcnow
+    )
+
+    DEFAULTS = [
+        ("Custom Tailoring", "Suits, dresses and kitenge made to your exact measurements.", "bi-scissors"),
+        ("Alterations", "Resizing, hemming and repairs that give your clothes a perfect fit.", "bi-rulers"),
+        ("Bridal Fitting", "Gowns and bridal party outfits fitted for your big day.", "bi-gem"),
+        ("Design Consultation", "Work with us to choose fabrics, colours and a style that suits you.", "bi-palette"),
+    ]
+
+    @classmethod
+    def active(cls):
+        services = cls.query.filter_by(is_active=True).order_by(cls.position, cls.id).all()
+
+        if not services and cls.query.count() == 0:
+            for position, (name, description, icon) in enumerate(cls.DEFAULTS):
+                db.session.add(cls(name=name, description=description, icon=icon, position=position))
+            db.session.commit()
+            services = cls.query.order_by(cls.position, cls.id).all()
+
+        return services
+
+    def __repr__(self):
+        return f"<Service {self.name}>"
+
+
+# =====================================================
+# SITE SETTINGS (contact details, social links, home page)
+# =====================================================
+
+class SiteSettings(db.Model):
+    __tablename__ = "site_settings"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    phone = db.Column(db.String(50), default="+254 0114 725 119")
+    email = db.Column(db.String(150), default="info@fortuneneedles.com")
+    location = db.Column(db.String(200), default="Nakuru, Kenya")
+
+    facebook = db.Column(db.String(255))
+    instagram = db.Column(db.String(255))
+    whatsapp = db.Column(db.String(255))
+    tiktok = db.Column(db.String(255))
+
+    # Number that receives shop orders on WhatsApp (falls back to `phone`)
+    order_whatsapp = db.Column(db.String(30))
+
+    hero_tagline = db.Column(db.String(150), default="Luxury Tailoring & Fashion")
+    hero_title = db.Column(db.String(255), default="Tailored With Precision.\nCrafted For Confidence.")
+    hero_text = db.Column(
+        db.Text,
+        default="From elegant gowns to executive suits, Fortune Needles brings your fashion ideas to life."
+    )
+    hero_button_text = db.Column(db.String(50), default="Explore Collection")
+
+    updated_at = db.Column(
+        db.DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow
+    )
+
+    @classmethod
+    def get(cls):
+        settings = cls.query.first()
+
+        if settings is None:
+            settings = cls()
+            db.session.add(settings)
+            db.session.commit()
+
+        return settings
+
+    def __repr__(self):
+        return "<SiteSettings>"
+
+
+# =====================================================
+# ADMIN NOTIFICATIONS
+# =====================================================
+
+class Notification(db.Model):
+    __tablename__ = "notifications"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    kind = db.Column(db.String(30), nullable=False)
+
+    title = db.Column(db.String(150), nullable=False)
+
+    message = db.Column(db.String(255))
+
+    link = db.Column(db.String(255))
+
+    is_read = db.Column(
+        db.Boolean,
+        default=False
+    )
+
+    created_at = db.Column(
+        db.DateTime,
+        default=datetime.utcnow
+    )
+
+    ICONS = {
+        "order": "bi-bag-check",
+        "appointment": "bi-calendar-check",
+        "design": "bi-scissors",
+        "message": "bi-envelope",
+        "customer": "bi-person-plus",
+        "review": "bi-star-fill",
+        "password": "bi-key-fill",
+    }
+
+    @property
+    def icon(self):
+        return self.ICONS.get(self.kind, "bi-bell")
+
+    @classmethod
+    def add(cls, kind, title, message=None, link=None):
+        """Queue a notification for the admin. The caller commits the session."""
+        notification = cls(kind=kind, title=title, message=message, link=link)
+        db.session.add(notification)
+        return notification
+
+    def __repr__(self):
+        return f"<Notification {self.kind}: {self.title}>"
+
+
+
+# =====================================================
+# DASHBOARD ALERTS A CUSTOMER HAS CLOSED
+# =====================================================
+
+class DismissedAlert(db.Model):
+    __tablename__ = "dismissed_alerts"
+    __table_args__ = (db.UniqueConstraint("user_id", "key"),)
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False
+    )
+
+    # Describes the alert *and* its state, e.g. "appointment-4-Confirmed",
+    # so a closed alert comes back only when something actually changes
+    key = db.Column(db.String(120), nullable=False)
+
+    created_at = db.Column(
+        db.DateTime,
+        default=datetime.utcnow
+    )

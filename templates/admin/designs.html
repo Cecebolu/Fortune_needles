@@ -1,0 +1,73 @@
+{% extends "admin/admin_base.html" %}
+{% from "admin/_macros.html" import page_header, status_badge, filter_tabs %}
+
+{% block title %}Design Requests{% endblock %}
+
+{% block content %}
+
+{{ page_header("Design Requests", "Review custom outfit requests, give a price quote and track progress.") }}
+
+{{ filter_tabs("admin.admin_designs", statuses, status) }}
+
+<div class="row g-4">
+
+    {% for design in designs %}
+    <div class="col-lg-6 col-xxl-4">
+        <div class="admin-panel h-100 d-flex flex-column">
+
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <h5 class="fw-bold text-capitalize mb-1">{{ design.clothing_type }}</h5>
+                    <a href="{{ url_for('admin.customer_detail', user_id=design.customer.id) }}" class="text-muted small">
+                        {{ design.customer.first_name }} {{ design.customer.last_name }} · {{ design.created_at.strftime('%d %b %Y') }}
+                    </a>
+                </div>
+                {{ status_badge(design.status) }}
+            </div>
+
+            {% if design.front_image %}
+            <img src="{{ url_for('static', filename='uploads/designs/' + design.front_image) }}"
+                 class="photo-fit rounded mb-3 w-100" style="height:200px;" alt="Design reference">
+            {% endif %}
+
+            <dl class="row small mb-3">
+                <dt class="col-4 text-muted fw-normal">Fabric</dt><dd class="col-8">{{ design.fabric or "—" }}</dd>
+                <dt class="col-4 text-muted fw-normal">Colour</dt><dd class="col-8">{{ design.color or "—" }}</dd>
+                {% if design.size %}<dt class="col-4 text-muted fw-normal">Size</dt><dd class="col-8">{{ design.size }}</dd>{% endif %}
+                <dt class="col-4 text-muted fw-normal">Notes</dt><dd class="col-8" style="white-space:pre-line">{{ design.description or "—" }}</dd>
+            </dl>
+
+            <form method="POST" action="{{ url_for('admin.update_design', design_id=design.id) }}" class="mt-auto pt-3 border-top">
+                <div class="row g-2 mb-2">
+                    <div class="col-12">
+                        <select name="status" class="form-select form-select-sm">
+                            {% for option in statuses %}
+                            <option value="{{ option }}" {% if option == design.status %}selected{% endif %}>{{ option }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small mb-1">Quote (KES)</label>
+                        <input type="number" step="1" min="0" name="estimated_price" class="form-control form-control-sm"
+                               value="{{ '%.0f'|format(design.estimated_price) if design.estimated_price else '' }}">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small mb-1">Ready by</label>
+                        <input type="date" name="expected_completion" class="form-control form-control-sm"
+                               value="{{ design.expected_completion.isoformat() if design.expected_completion else '' }}">
+                    </div>
+                </div>
+                <button class="btn btn-admin btn-sm w-100">Save</button>
+            </form>
+
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12">
+        <div class="admin-panel text-center text-muted py-5">No design requests found.</div>
+    </div>
+    {% endfor %}
+
+</div>
+
+{% endblock %}

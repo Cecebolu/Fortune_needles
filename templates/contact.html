@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Contact Us{% endblock %}
+
+{% block content %}
+
+<section class="container py-5 mt-5">
+
+    <div class="text-center mb-5">
+        <h1 class="fw-bold">Contact Us</h1>
+        <p class="lead text-muted">We would love to hear from you</p>
+    </div>
+
+    <div class="row g-4 justify-content-center">
+
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 p-4 h-100">
+                <h5 class="fw-bold mb-4">Get in touch</h5>
+                <p><i class="bi bi-geo-alt-fill me-2"></i>{{ site.location }}</p>
+                <p><i class="bi bi-envelope-fill me-2"></i>{{ site.email }}</p>
+                <p><i class="bi bi-telephone-fill me-2"></i>{{ site.phone }}</p>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <form method="POST" class="card shadow-sm border-0 p-4">
+
+                {% if current_user.is_authenticated %}
+                <div class="contact-sender mb-3">
+                    <span class="avatar">{{ current_user.first_name[:1] }}{{ current_user.last_name[:1] }}</span>
+                    <div class="min-w-0">
+                        <small class="text-muted d-block">Sending as</small>
+                        <strong class="d-block">{{ current_user.first_name }} {{ current_user.last_name }}</strong>
+                        <small class="text-muted d-block text-truncate">{{ current_user.email }} · {{ current_user.phone }}</small>
+                    </div>
+                </div>
+                {% else %}
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Name</label>
+                        <input type="text" name="name" class="form-control" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" class="form-control" required>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Phone</label>
+                    <input type="tel" name="phone" class="form-control">
+                </div>
+                {% endif %}
+
+                <div class="mb-3">
+                    <label class="form-label">Subject</label>
+                    <input type="text" name="subject" class="form-control" maxlength="200" required
+                           placeholder="e.g. Price for school uniforms">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Message</label>
+                    <textarea name="message" class="form-control" rows="5" required></textarea>
+                </div>
+
+                <button class="btn btn-gold w-100">
+                    <i class="bi bi-send me-2"></i>Send Message
+                </button>
+
+            </form>
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}

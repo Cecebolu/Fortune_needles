@@ -1,0 +1,61 @@
+{% extends "admin/admin_base.html" %}
+{% from "admin/_macros.html" import page_header, empty_row %}
+
+{% block title %}Customers{% endblock %}
+
+{% block content %}
+
+{{ page_header("Customers", customers|length ~ " registered customer" ~ ("" if customers|length == 1 else "s") ~ (" matching \"" ~ search ~ "\"" if search else "")) }}
+
+<form method="GET" class="admin-search mb-4">
+    <i class="bi bi-search"></i>
+    <input type="text" name="q" value="{{ search }}" class="form-control" placeholder="Search by name, username, email or phone">
+</form>
+
+<div class="admin-panel">
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Customer</th>
+                    <th>Contact</th>
+                    <th class="text-center">Appointments</th>
+                    <th class="text-center">Designs</th>
+                    <th class="text-center">Orders</th>
+                    <th>Joined</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for customer in customers %}
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="avatar">{{ customer.first_name[:1] }}{{ customer.last_name[:1] }}</span>
+                            <div>
+                                <strong>{{ customer.first_name }} {{ customer.last_name }}</strong>
+                                <small class="text-muted d-block">@{{ customer.username }}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        {{ customer.phone }}
+                        <small class="text-muted d-block">{{ customer.email }}</small>
+                    </td>
+                    <td class="text-center">{{ customer.appointments|length }}</td>
+                    <td class="text-center">{{ customer.custom_designs|length }}</td>
+                    <td class="text-center">{{ customer.orders|length }}</td>
+                    <td>{{ customer.created_at.strftime('%d %b %Y') }}</td>
+                    <td class="text-end">
+                        <a href="{{ url_for('admin.customer_detail', user_id=customer.id) }}" class="btn btn-sm btn-outline-dark">View</a>
+                    </td>
+                </tr>
+                {% else %}
+                {{ empty_row(7, "No customers match your search." if search else "No customers have signed up yet.") }}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

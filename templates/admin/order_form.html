@@ -1,0 +1,142 @@
+{% extends "admin/admin_base.html" %}
+{% from "admin/_macros.html" import page_header %}
+
+{% block title %}New Order{% endblock %}
+
+{% block content %}
+
+{% call page_header("New Order", "Record an order for a customer. Stock is reduced automatically.") %}
+<a href="{{ url_for('admin.admin_orders') }}" class="btn btn-outline-dark">
+    <i class="bi bi-arrow-left me-1"></i> Back to Orders
+</a>
+{% endcall %}
+
+{% if not customers or not products %}
+<div class="alert alert-warning">
+    {% if not customers %}There are no customers yet. A customer must sign up before you can record an order for them.{% endif %}
+    {% if not products %}There are no available products. <a href="{{ url_for('admin.add_product') }}">Add a product</a> first.{% endif %}
+</div>
+{% endif %}
+
+<form method="POST" class="row g-4">
+
+    <div class="col-xl-8">
+        <div class="admin-panel">
+
+            <h5 class="fw-bold mb-3">Items</h5>
+
+            <div id="itemRows">
+                <div class="row g-2 mb-2 item-row">
+                    <div class="col-7">
+                        <select name="product_id" class="form-select product-select" required>
+                            <option value="">Choose a product</option>
+                            {% for product in products %}
+                            <option value="{{ product.id }}" data-price="{{ product.price }}" data-stock="{{ product.stock }}">
+                                {{ product.name }} — KES {{ "{:,.0f}".format(product.price) }} ({{ product.stock }} in stock)
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-3">
+                        <input type="number" name="quantity" class="form-control quantity-input" value="1" min="1" required>
+                    </div>
+                    <div class="col-2">
+                        <button type="button" class="btn btn-outline-danger w-100 remove-row" title="Remove">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" id="addRow" class="btn btn-sm btn-outline-dark mt-2">
+                <i class="bi bi-plus"></i> Add another product
+            </button>
+
+            <hr>
+
+            <div class="d-flex justify-content-between fs-5">
+                <span>Total</span>
+                <strong id="orderTotal">KES 0</strong>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="col-xl-4">
+        <div class="admin-panel">
+
+            <h5 class="fw-bold mb-3">Details</h5>
+
+            <div class="mb-3">
+                <label class="form-label">Customer</label>
+                <select name="user_id" class="form-select" required>
+                    <option value="">Choose a customer</option>
+                    {% for customer in customers %}
+                    <option value="{{ customer.id }}" {% if request.args.get('customer')|int == customer.id %}selected{% endif %}>
+                        {{ customer.first_name }} {{ customer.last_name }} ({{ customer.phone }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Payment</label>
+                <select name="payment_status" class="form-select">
+                    {% for option in payment_statuses %}
+                    <option value="{{ option }}">{{ option }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label">Delivery date</label>
+                <input type="date" name="delivery_date" class="form-control">
+            </div>
+
+            <button class="btn btn-admin w-100" {% if not customers or not products %}disabled{% endif %}>
+                <i class="bi bi-check2-circle me-1"></i> Create Order
+            </button>
+
+        </div>
+    </div>
+
+</form>
+
+<script>
+const rows = document.getElementById("itemRows");
+const totalEl = document.getElementById("orderTotal");
+
+function updateTotal() {
+    let total = 0;
+    rows.querySelectorAll(".item-row").forEach(function (row) {
+        const option = row.querySelector(".product-select").selectedOptions[0];
+        const quantity = parseInt(row.querySelector(".quantity-input").value) || 0;
+        if (option && option.dataset.price) {
+            total += parseFloat(option.dataset.price) * quantity;
+            row.querySelector(".quantity-input").max = option.dataset.stock;
+        }
+    });
+    totalEl.textContent = "KES " + total.toLocaleString();
+}
+
+document.getElementById("addRow").addEventListener("click", function () {
+    const copy = rows.querySelector(".item-row").cloneNode(true);
+    copy.querySelector(".product-select").value = "";
+    copy.querySelector(".quantity-input").value = 1;
+    rows.appendChild(copy);
+    updateTotal();
+});
+
+rows.addEventListener("click", function (event) {
+    const button = event.target.closest(".remove-row");
+    if (button && rows.querySelectorAll(".item-row").length > 1) {
+        button.closest(".item-row").remove();
+        updateTotal();
+    }
+});
+
+rows.addEventListener("input", updateTotal);
+rows.addEventListener("change", updateTotal);
+</script>
+
+{% endblock %}

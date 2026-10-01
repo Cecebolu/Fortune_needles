@@ -1,0 +1,103 @@
+{% extends "admin/admin_base.html" %}
+{% from "admin/_macros.html" import page_header, money %}
+
+{% macro service_fields(service=None) %}
+<div class="mb-3">
+    <label class="form-label">Name</label>
+    <input type="text" name="name" class="form-control" maxlength="150" required value="{{ service.name if service else '' }}">
+</div>
+<div class="mb-3">
+    <label class="form-label">Description</label>
+    <textarea name="description" class="form-control" rows="3">{{ service.description if service else '' }}</textarea>
+</div>
+<div class="mb-3">
+    <label class="form-label">Starting price (KES, optional)</label>
+    <input type="number" name="starting_price" class="form-control" min="0" step="1"
+           value="{{ '%.0f'|format(service.starting_price) if service and service.starting_price else '' }}">
+</div>
+<div class="mb-3">
+    <label class="form-label d-block">Icon</label>
+    <div class="icon-picker">
+        {% for icon in icons %}
+        <label>
+            <input type="radio" name="icon" value="{{ icon }}"
+                   {% if (service and service.icon == icon) or (not service and loop.first) %}checked{% endif %}>
+            <span><i class="bi {{ icon }}"></i></span>
+        </label>
+        {% endfor %}
+    </div>
+</div>
+<div class="form-check form-switch mb-4">
+    <input class="form-check-input" type="checkbox" name="is_active" id="active{{ service.id if service else 'New' }}"
+           {% if not service or service.is_active %}checked{% endif %}>
+    <label class="form-check-label" for="active{{ service.id if service else 'New' }}">Show on website</label>
+</div>
+{% endmacro %}
+
+{% block title %}Services{% endblock %}
+
+{% block content %}
+
+{% call page_header("Services", "These appear on the Services page and in the appointment booking form.") %}
+<a href="{{ url_for('public.services') }}" target="_blank" class="btn btn-outline-dark">
+    <i class="bi bi-box-arrow-up-right me-1"></i> View Services Page
+</a>
+{% endcall %}
+
+<div class="row g-4">
+
+    <div class="col-xl-7">
+        <div class="admin-panel">
+            {% for service in services %}
+            <div class="service-row {% if not service.is_active %}is-hidden{% endif %}">
+                <span class="stat-icon"><i class="bi {{ service.icon }}"></i></span>
+                <div class="flex-grow-1">
+                    <strong>{{ service.name }}</strong>
+                    {% if not service.is_active %}<span class="badge text-bg-light ms-1">Hidden</span>{% endif %}
+                    {% if service.starting_price %}<small class="text-muted ms-1">from {{ money(service.starting_price) }}</small>{% endif %}
+                    <small class="text-muted d-block">{{ service.description or "" }}</small>
+                </div>
+                <div class="d-flex gap-1">
+                    <form method="POST" action="{{ url_for('admin.move_service', service_id=service.id, direction='up') }}">
+                        <button class="btn btn-sm btn-light" title="Move up" {% if loop.first %}disabled{% endif %}><i class="bi bi-arrow-up"></i></button>
+                    </form>
+                    <form method="POST" action="{{ url_for('admin.move_service', service_id=service.id, direction='down') }}">
+                        <button class="btn btn-sm btn-light" title="Move down" {% if loop.last %}disabled{% endif %}><i class="bi bi-arrow-down"></i></button>
+                    </form>
+                    <a href="{{ url_for('admin.admin_services', edit=service.id) }}#edit-service" class="btn btn-sm btn-outline-dark" title="Edit">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    <form method="POST" action="{{ url_for('admin.delete_service', service_id=service.id) }}"
+                          onsubmit="return confirm('Delete this service?');">
+                        <button class="btn btn-sm btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></button>
+                    </form>
+                </div>
+            </div>
+            {% else %}
+            <p class="text-muted text-center py-4 mb-0">No services yet. Add your first one.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="col-xl-5">
+        {% if editing %}
+        <form method="POST" action="{{ url_for('admin.edit_service', service_id=editing.id) }}" class="admin-panel" id="edit-service">
+            <div class="admin-panel-header">
+                <h5>Edit {{ editing.name }}</h5>
+                <a href="{{ url_for('admin.admin_services') }}">Cancel</a>
+            </div>
+            {{ service_fields(editing) }}
+            <button class="btn btn-admin w-100">Save Changes</button>
+        </form>
+        {% else %}
+        <form method="POST" class="admin-panel" id="add-service">
+            <h5 class="fw-bold mb-3">Add a Service</h5>
+            {{ service_fields() }}
+            <button class="btn btn-admin w-100"><i class="bi bi-plus-circle me-1"></i> Add Service</button>
+        </form>
+        {% endif %}
+    </div>
+
+</div>
+
+{% endblock %}

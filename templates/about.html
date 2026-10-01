@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}{{ about.title }}{% endblock %}
+
+{% block content %}
+
+<section class="container py-5 mt-5">
+
+    <div class="text-center mb-5">
+        <h1 class="fw-bold">{{ about.title }}</h1>
+        {% if about.subtitle %}
+        <p class="lead text-muted">{{ about.subtitle }}</p>
+        {% endif %}
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+
+            {% for paragraph in (about.description or "").split("\n\n") if paragraph.strip() %}
+            <p class="fs-5">{{ paragraph.strip() }}</p>
+            {% endfor %}
+
+            <div class="text-center mt-5">
+                <a href="{{ url_for('public.services') }}" class="btn btn-gold me-2">
+                    Our Services
+                </a>
+                <a href="{{ url_for('public.contact') }}" class="btn btn-outline-dark">
+                    Contact Us
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+    {% if current_user.is_authenticated and current_user.role == "admin" %}
+    <div class="text-center mt-4">
+        <a href="{{ url_for('admin.admin_about') }}" class="btn btn-sm btn-dark">
+            <i class="bi bi-pencil-square me-1"></i>Edit this page
+        </a>
+    </div>
+    {% endif %}
+
+</section>
+
+{% endblock %}

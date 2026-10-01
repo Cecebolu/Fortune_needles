@@ -1,0 +1,192 @@
+{% extends "admin/admin_base.html" %}
+{% from "admin/_macros.html" import page_header, status_badge, money %}
+
+{% block title %}Reports{% endblock %}
+
+{% block content %}
+
+{% call page_header("Reports", "Business performance over the last " ~ months_back ~ " months.") %}
+<div class="btn-group" role="group" aria-label="Time range">
+    {% for option in [3, 6, 12] %}
+    <a href="{{ url_for('admin.admin_reports', months=option) }}"
+       class="btn btn-sm {{ 'btn-dark' if option == months_back else 'btn-outline-dark' }}">{{ option }} months</a>
+    {% endfor %}
+</div>
+{% endcall %}
+
+<!-- Headline numbers -->
+<div class="row g-4 mb-4">
+    {% for value, label, note in [
+        (money(revenue), "Revenue", "from paid orders"),
+        (order_count, "Orders", "all orders placed"),
+        (money(average_order), "Average paid order", ""),
+        (money(unpaid), "Awaiting payment", "open orders not yet paid"),
+    ] %}
+    <div class="col-sm-6 col-xl-3">
+        <div class="admin-panel h-100">
+            <p class="text-muted small mb-1">{{ label }}</p>
+            <h3 class="report-number">{{ value }}</h3>
+            {% if note %}<small class="text-muted">{{ note }}</small>{% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="row g-4 mb-4">
+
+    <!-- Monthly revenue chart -->
+    <div class="col-xl-8">
+        <div class="admin-panel h-100">
+            <div class="admin-panel-header">
+                <h5>Revenue by Month</h5>
+                <button type="button" class="btn btn-sm btn-link text-dark p-0" data-bs-toggle="collapse" data-bs-target="#revenueTable">
+                    <i class="bi bi-table me-1"></i>Show table
+                </button>
+            </div>
+
+            {% if max_revenue %}
+            <div class="bar-chart" role="img" aria-label="Revenue by month, KES">
+                <div class="bar-chart-grid">
+                    {% for step in [1, 0.5, 0] %}
+                    <div class="bar-chart-gridline" style="bottom: {{ step * 100 }}%">
+                        <span>{{ "{:,.0f}".format(max_revenue * step) }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="bar-chart-bars">
+                    {% for m in monthly %}
+                    <div class="bar-chart-col" tabindex="0"
+                         data-tip="{{ m.label }}: {{ money(m.revenue) }} · {{ m.orders }} order{{ '' if m.orders == 1 else 's' }}">
+                        <div class="bar-chart-bar" style="height: {{ (m.revenue / max_revenue * 100) if m.revenue else 0 }}%"></div>
+                        <span class="bar-chart-label">{{ m.short }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="bar-chart-tooltip" hidden></div>
+            </div>
+            {% else %}
+            <div class="text-center text-muted py-5">
+                <i class="bi bi-bar-chart fs-1 d-block mb-2"></i>
+                No paid orders in this period yet. Revenue appears here once orders are marked Paid.
+            </div>
+            {% endif %}
+
+            <div class="collapse mt-3" id="revenueTable">
+                <table class="table table-sm mb-0">
+                    <thead><tr><th>Month</th><th class="text-end">Orders</th><th class="text-end">Revenue</th></tr></thead>
+                    <tbody>
+                        {% for m in monthly %}
+                        <tr><td>{{ m.label }}</td><td class="text-end">{{ m.orders }}</td><td class="text-end">{{ money(m.revenue) }}</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order status -->
+    <div class="col-xl-4">
+        <div class="admin-panel h-100">
+            <div class="admin-panel-header">
+                <h5>Orders by Status</h5>
+                <a href="{{ url_for('admin.admin_orders') }}">View orders</a>
+            </div>
+            <ul class="list-unstyled mb-0">
+                {% for status, count in orders_by_status %}
+                <li class="admin-list-item">
+                    {{ status_badge(status) }}
+                    <strong>{{ count }}</strong>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+</div>
+
+<div class="row g-4">
+
+    <!-- Top products -->
+    <div class="col-xl-5">
+        <div class="admin-panel h-100">
+            <div class="admin-panel-header">
+                <h5>Best-Selling Products</h5>
+            </div>
+            <table class="table align-middle mb-0">
+                <thead><tr><th>Product</th><th class="text-end">Sold</th><th class="text-end">Sales</th></tr></thead>
+                <tbody>
+                    {% for name, quantity, sales in top_products %}
+                    <tr><td>{{ name }}</td><td class="text-end">{{ quantity }}</td><td class="text-end">{{ money(sales) }}</td></tr>
+                    {% else %}
+                    <tr><td colspan="3" class="text-center text-muted py-4">No products sold in this period.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Appointments by service -->
+    <div class="col-xl-4">
+        <div class="admin-panel h-100">
+            <div class="admin-panel-header">
+                <h5>Appointments by Service</h5>
+            </div>
+            {% set most = services[0][1] if services else 0 %}
+            {% for name, count in services %}
+            <div class="hbar-row" tabindex="0" title="{{ name }}: {{ count }}">
+                <div class="d-flex justify-content-between small mb-1">
+                    <span>{{ name }}</span>
+                    <strong>{{ count }}</strong>
+                </div>
+                <div class="hbar-track"><div class="hbar" style="width: {{ count / most * 100 }}%"></div></div>
+            </div>
+            {% else %}
+            <p class="text-center text-muted py-4 mb-0">No appointments in this period.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Activity summary -->
+    <div class="col-xl-3">
+        <div class="admin-panel h-100">
+            <div class="admin-panel-header">
+                <h5>Activity</h5>
+            </div>
+            <ul class="list-unstyled mb-0">
+                <li class="admin-list-item"><span>New customers</span><strong>{{ new_customers }}</strong></li>
+                <li class="admin-list-item"><span>Design requests</span><strong>{{ designs }}</strong></li>
+                {% for status, count in appointments_by_status %}
+                <li class="admin-list-item"><span>{{ status }} bookings</span><strong>{{ count }}</strong></li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+</div>
+
+<script>
+document.querySelectorAll(".bar-chart").forEach(function (chart) {
+    const tip = chart.querySelector(".bar-chart-tooltip");
+    function show(col) {
+        tip.textContent = col.dataset.tip;
+        tip.hidden = false;
+        const box = chart.getBoundingClientRect();
+        const bar = col.getBoundingClientRect();
+        const left = Math.min(Math.max(bar.left - box.left + bar.width / 2, 80), box.width - 80);
+        tip.style.left = left + "px";
+        chart.querySelectorAll(".bar-chart-col").forEach(c => c.classList.toggle("dim", c !== col));
+    }
+    function hide() {
+        tip.hidden = true;
+        chart.querySelectorAll(".bar-chart-col").forEach(c => c.classList.remove("dim"));
+    }
+    chart.querySelectorAll(".bar-chart-col").forEach(function (col) {
+        col.addEventListener("mouseenter", () => show(col));
+        col.addEventListener("focus", () => show(col));
+    });
+    chart.addEventListener("mouseleave", hide);
+    chart.addEventListener("focusout", hide);
+});
+</script>
+
+{% endblock %}

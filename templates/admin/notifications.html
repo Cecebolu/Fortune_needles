@@ -1,0 +1,46 @@
+{% extends "admin/admin_base.html" %}
+{% from "admin/_macros.html" import page_header %}
+
+{% block title %}Notifications{% endblock %}
+
+{% block content %}
+
+{% call page_header("Notifications", "New orders, bookings, design requests, messages and sign-ups.") %}
+{% if unread_notifications %}
+<form method="POST" action="{{ url_for('admin.read_all_notifications') }}">
+    <button class="btn btn-outline-dark"><i class="bi bi-check2-all me-1"></i> Mark all as read</button>
+</form>
+{% endif %}
+{% endcall %}
+
+<ul class="nav admin-tabs mb-4">
+    <li class="nav-item">
+        <a class="nav-link {% if show != 'unread' %}active{% endif %}" href="{{ url_for('admin.admin_notifications') }}">All</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if show == 'unread' %}active{% endif %}" href="{{ url_for('admin.admin_notifications', show='unread') }}">
+            Unread {% if unread_notifications %}<span class="badge text-bg-danger ms-1">{{ unread_notifications }}</span>{% endif %}
+        </a>
+    </li>
+</ul>
+
+<div class="admin-panel p-0 overflow-hidden">
+    {% for n in notifications %}
+    <a href="{{ url_for('admin.open_notification', notification_id=n.id) }}"
+       class="notification-row {% if not n.is_read %}unread{% endif %}">
+        <span class="notification-icon notification-{{ n.kind }}"><i class="bi {{ n.icon }}"></i></span>
+        <div class="flex-grow-1 min-w-0">
+            <strong>{{ n.title }}</strong>
+            <div class="text-muted small text-truncate">{{ n.message or "" }}</div>
+        </div>
+        <small class="text-muted text-nowrap">{{ n.created_at|timeago }}</small>
+    </a>
+    {% else %}
+    <div class="text-center text-muted py-5">
+        <i class="bi bi-bell-slash fs-1 d-block mb-2"></i>
+        {{ "You're all caught up." if show == "unread" else "No notifications yet." }}
+    </div>
+    {% endfor %}
+</div>
+
+{% endblock %}

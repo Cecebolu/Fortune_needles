@@ -1,0 +1,29 @@
+{# Star ratings: read-only display and a clickable 1-5 picker #}
+
+{% macro stars(value, size="") %}
+{% set rounded = ((value or 0) * 2)|round / 2 %}
+<span class="stars-display {{ size }}" role="img" aria-label="{{ '%.1f'|format(value or 0) }} out of 5 stars">
+    {%- for i in range(1, 6) -%}
+    {%- if rounded >= i -%}<i class="bi bi-star-fill"></i>
+    {%- elif rounded >= i - 0.5 -%}<i class="bi bi-star-half"></i>
+    {%- else -%}<i class="bi bi-star"></i>
+    {%- endif -%}
+    {%- endfor -%}
+</span>
+{% endmacro %}
+
+
+{% macro star_input(prefix, current=0) %}
+{# Radios are listed 5 -> 1 and shown right-to-left, so hovering a star lights it and every star before it #}
+<fieldset class="star-input">
+    <legend class="visually-hidden">Your rating</legend>
+    {% for i in range(5, 0, -1) %}
+    <input type="radio" id="{{ prefix }}-star{{ i }}" name="rating" value="{{ i }}" required
+           {% if current == i %}checked{% endif %}>
+    <label for="{{ prefix }}-star{{ i }}" title="{{ i }} star{{ '' if i == 1 else 's' }}">
+        <i class="bi bi-star-fill"></i>
+        <span class="visually-hidden">{{ i }} star{{ '' if i == 1 else 's' }}</span>
+    </label>
+    {% endfor %}
+</fieldset>
+{% endmacro %}

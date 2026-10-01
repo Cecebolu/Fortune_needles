@@ -1,0 +1,70 @@
+{% extends "admin/admin_base.html" %}
+{% from "admin/_macros.html" import page_header %}
+
+{% block title %}Contact Info{% endblock %}
+
+{% block content %}
+
+{% call page_header("Contact Info", "Shown in the website footer and on the Contact page.") %}
+<a href="{{ url_for('admin.admin_messages') }}" class="btn btn-outline-dark">
+    <i class="bi bi-inbox me-1"></i> Messages
+    {% if unread_messages %}<span class="badge text-bg-danger ms-1">{{ unread_messages }}</span>{% endif %}
+</a>
+{% endcall %}
+
+<form method="POST" class="row g-4">
+
+    <div class="col-xl-6">
+        <div class="admin-panel h-100">
+            <h5 class="fw-bold mb-3">Business Details</h5>
+
+            <div class="mb-3">
+                <label class="form-label"><i class="bi bi-telephone me-1"></i> Phone number</label>
+                <input type="text" name="phone" class="form-control" value="{{ settings.phone or '' }}">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label"><i class="bi bi-envelope me-1"></i> Email</label>
+                <input type="email" name="email" class="form-control" value="{{ settings.email or '' }}">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label"><i class="bi bi-geo-alt me-1"></i> Location</label>
+                <input type="text" name="location" class="form-control" value="{{ settings.location or '' }}">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label"><i class="bi bi-whatsapp me-1"></i> WhatsApp number for orders</label>
+                <input type="tel" name="order_whatsapp" class="form-control" placeholder="e.g. 0114 725 119"
+                       value="{{ settings.order_whatsapp or '' }}">
+                <small class="text-muted">Customers' cart orders are sent here. If empty, the phone number above is used.</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-6">
+        <div class="admin-panel h-100">
+            <h5 class="fw-bold mb-1">Social Media</h5>
+            <p class="text-muted small mb-3">Paste the full link to each page. Leave a box empty to hide that icon.</p>
+
+            {% for field, icon, example in [
+                ("facebook", "bi-facebook", "https://facebook.com/fortuneneedles"),
+                ("instagram", "bi-instagram", "https://instagram.com/fortuneneedles"),
+                ("whatsapp", "bi-whatsapp", "https://wa.me/254114725119"),
+                ("tiktok", "bi-tiktok", "https://tiktok.com/@fortuneneedles"),
+            ] %}
+            <div class="input-group mb-3">
+                <span class="input-group-text"><i class="bi {{ icon }}"></i></span>
+                <input type="url" name="{{ field }}" class="form-control" placeholder="{{ example }}" value="{{ settings[field] or '' }}">
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="col-12">
+        <button class="btn btn-admin">Save Changes</button>
+    </div>
+
+</form>
+
+{% endblock %}

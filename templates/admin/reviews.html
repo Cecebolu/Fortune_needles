@@ -1,0 +1,85 @@
+{% extends "admin/admin_base.html" %}
+{% from "admin/_macros.html" import page_header %}
+
+{% macro stars(value) -%}
+<span class="stars" title="{{ value }} out of 5">
+    {%- for i in range(1, 6) -%}
+    <i class="bi {{ 'bi-star-fill' if i <= (value or 0) else 'bi-star' }}"></i>
+    {%- endfor -%}
+</span>
+{%- endmacro %}
+
+{% block title %}Reviews{% endblock %}
+
+{% block content %}
+
+{{ page_header("Reviews", "What customers say about your products.") }}
+
+<div class="row g-4">
+
+    <div class="col-xl-4">
+        <div class="admin-panel">
+            <div class="text-center mb-3">
+                <div class="display-5 fw-bold text-dark">{{ "%.1f"|format(average) if average else "—" }}</div>
+                {{ stars((average or 0)|round|int) }}
+                <p class="text-muted small mb-0 mt-1">{{ total }} review{{ "" if total == 1 else "s" }}</p>
+            </div>
+
+            {% for star in range(5, 0, -1) %}
+            {% set count = counts.get(star, 0) %}
+            <a href="{{ url_for('admin.admin_reviews', rating=star) }}"
+               class="rating-row {% if rating == star %}active{% endif %}">
+                <span>{{ star }} <i class="bi bi-star-fill"></i></span>
+                <div class="progress flex-grow-1" role="progressbar" aria-label="{{ star }} star reviews"
+                     aria-valuenow="{{ count }}" aria-valuemin="0" aria-valuemax="{{ total }}">
+                    <div class="progress-bar" style="width: {{ (count / total * 100) if total else 0 }}%"></div>
+                </div>
+                <span class="text-muted">{{ count }}</span>
+            </a>
+            {% endfor %}
+
+            {% if rating %}
+            <a href="{{ url_for('admin.admin_reviews') }}" class="btn btn-sm btn-outline-dark w-100 mt-3">Show all ratings</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-xl-8">
+        {% for review in reviews %}
+        <div class="admin-panel mb-3">
+            <div class="d-flex justify-content-between align-items-start gap-3">
+                <div>
+                    {{ stars(review.rating) }}
+                    <h6 class="fw-bold mt-2 mb-1">
+                        {{ review.product.name if review.product else "General review" }}
+                    </h6>
+                    <small class="text-muted">
+                        {% if review.customer %}
+                        <a href="{{ url_for('admin.customer_detail', user_id=review.customer.id) }}" class="text-muted">
+                            {{ review.customer.first_name }} {{ review.customer.last_name }}
+                        </a>
+                        {% else %}Anonymous{% endif %}
+                        · {{ review.created_at.strftime('%d %b %Y') }}
+                    </small>
+                </div>
+                <form method="POST" action="{{ url_for('admin.delete_review', review_id=review.id) }}"
+                      onsubmit="return confirm('Delete this review?');">
+                    <button class="btn btn-sm btn-outline-danger" title="Delete review">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </form>
+            </div>
+            {% if review.comment %}
+            <p class="mb-0 mt-3">{{ review.comment }}</p>
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="admin-panel text-center text-muted py-5">
+            {{ "No " ~ rating ~ "-star reviews." if rating else "No reviews yet." }}
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+
+{% endblock %}

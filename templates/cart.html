@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}My Cart{% endblock %}
+
+{% block content %}
+
+<section class="container py-5 mt-5">
+
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+        <div>
+            <h1 class="fw-bold mb-1">My Cart</h1>
+            <p class="text-muted mb-0">Review your items, then send the order to us on WhatsApp.</p>
+        </div>
+        <a href="{{ url_for('public.shop') }}" class="btn btn-outline-dark">
+            <i class="bi bi-arrow-left me-2"></i>Continue Shopping
+        </a>
+    </div>
+
+    {% if lines %}
+    <div class="row g-4">
+
+        <div class="col-lg-8">
+            <form method="POST" action="{{ url_for('cart.update') }}" class="cart-panel" id="cartForm">
+
+                {% for line in lines %}
+                {% set product = line.product %}
+                <div class="cart-line">
+                    {% if product.image %}
+                    <img src="{{ url_for('static', filename='uploads/products/' + product.image) }}" alt="{{ product.name }}" class="cart-thumb">
+                    {% else %}
+                    <span class="cart-thumb cart-thumb-icon"><i class="bi bi-bag"></i></span>
+                    {% endif %}
+
+                    <div class="flex-grow-1 min-w-0">
+                        <h5 class="fw-bold mb-1">{{ product.name }}</h5>
+                        <small class="text-muted">KES {{ "{:,.0f}".format(product.price) }} each · {{ product.stock }} in stock</small>
+                    </div>
+
+                    <input type="number" name="quantity_{{ product.id }}" value="{{ line.quantity }}"
+                           min="0" max="{{ product.stock }}" class="form-control cart-qty"
+                           aria-label="Quantity of {{ product.name }}" onchange="this.form.submit()">
+
+                    <strong class="cart-subtotal">KES {{ "{:,.0f}".format(line.subtotal) }}</strong>
+
+                    <button type="submit" form="remove{{ product.id }}" class="btn btn-sm btn-outline-danger" title="Remove {{ product.name }}">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+                {% endfor %}
+
+                <noscript><button class="btn btn-outline-dark mt-3">Update Cart</button></noscript>
+            </form>
+
+            {% for line in lines %}
+            <form method="POST" action="{{ url_for('cart.remove', product_id=line.product.id) }}" id="remove{{ line.product.id }}"></form>
+            {% endfor %}
+        </div>
+
+        <div class="col-lg-4">
+            <div class="cart-panel cart-summary">
+                <h5 class="fw-bold mb-3">Order Summary</h5>
+
+                {% for line in lines %}
+                <div class="d-flex justify-content-between small mb-2">
+                    <span>{{ line.quantity }} x {{ line.product.name }}</span>
+                    <span>KES {{ "{:,.0f}".format(line.subtotal) }}</span>
+                </div>
+                {% endfor %}
+
+                <hr>
+
+                <div class="d-flex justify-content-between fs-5 mb-4">
+                    <strong>Total</strong>
+                    <strong>KES {{ "{:,.0f}".format(total) }}</strong>
+                </div>
+
+                <form method="POST" action="{{ url_for('cart.checkout') }}">
+                    <button class="btn btn-whatsapp w-100">
+                        <i class="bi bi-whatsapp me-2"></i>Order via WhatsApp
+                    </button>
+                </form>
+
+                <p class="small text-muted mt-3 mb-0">
+                    WhatsApp opens with your order ready to send. We'll confirm payment and delivery with you there.
+                </p>
+            </div>
+        </div>
+
+    </div>
+    {% else %}
+    <div class="cart-panel text-center py-5">
+        <i class="bi bi-cart3 display-4 text-muted d-block mb-3"></i>
+        <h4 class="fw-bold">Your cart is empty</h4>
+        <p class="text-muted">Browse the shop and add the pieces you love.</p>
+        <a href="{{ url_for('public.shop') }}" class="btn btn-gold">Go to Shop</a>
+    </div>
+    {% endif %}
+
+</section>
+
+{% endblock %}

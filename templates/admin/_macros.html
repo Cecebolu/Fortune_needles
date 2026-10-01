@@ -1,0 +1,57 @@
+{# Shared building blocks for admin pages #}
+
+{% macro page_header(title, subtitle="") %}
+<div class="admin-header">
+    <div>
+        <h1>{{ title }}</h1>
+        {% if subtitle %}
+        <p class="text-muted mb-0">{{ subtitle }}</p>
+        {% endif %}
+    </div>
+    {% if caller %}
+    <div class="d-flex gap-2 flex-wrap">
+        {{ caller() }}
+    </div>
+    {% endif %}
+</div>
+{% endmacro %}
+
+
+{% macro status_badge(status) %}
+{% set colors = {
+    "Pending": "warning", "Received": "warning", "Submitted": "warning",
+    "Confirmed": "info", "Reviewed": "info", "In Progress": "info",
+    "Ready": "primary",
+    "Completed": "success", "Delivered": "success", "Paid": "success",
+    "Cancelled": "danger", "Rejected": "danger", "Refunded": "secondary",
+} %}
+<span class="badge rounded-pill text-bg-{{ colors.get(status, 'secondary') }}">{{ status }}</span>
+{% endmacro %}
+
+
+{% macro filter_tabs(endpoint, options, current, param="status") %}
+<ul class="nav admin-tabs mb-4">
+    <li class="nav-item">
+        <a class="nav-link {% if not current %}active{% endif %}"
+           href="{{ url_for(endpoint, **(kwargs.get('keep', {}))) }}">All</a>
+    </li>
+    {% for option in options %}
+    <li class="nav-item">
+        <a class="nav-link {% if current == option %}active{% endif %}"
+           href="{{ url_for(endpoint, **dict(kwargs.get('keep', {}), **{param: option})) }}">{{ option }}</a>
+    </li>
+    {% endfor %}
+</ul>
+{% endmacro %}
+
+
+{% macro money(amount) -%}
+KES {{ "{:,.0f}".format(amount or 0) }}
+{%- endmacro %}
+
+
+{% macro empty_row(colspan, message) %}
+<tr>
+    <td colspan="{{ colspan }}" class="text-center text-muted py-5">{{ message }}</td>
+</tr>
+{% endmacro %}

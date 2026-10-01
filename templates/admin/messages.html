@@ -1,0 +1,83 @@
+{% extends "admin/admin_base.html" %}
+{% from "admin/_macros.html" import page_header %}
+
+{% block title %}Messages{% endblock %}
+
+{% block content %}
+
+{{ page_header("Messages", "Sent by visitors through the Contact page.") }}
+
+<ul class="nav admin-tabs mb-4">
+    <li class="nav-item">
+        <a class="nav-link {% if show != 'unread' %}active{% endif %}" href="{{ url_for('admin.admin_messages') }}">All</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if show == 'unread' %}active{% endif %}" href="{{ url_for('admin.admin_messages', show='unread') }}">
+            Unread {% if unread_messages %}<span class="badge text-bg-danger ms-1">{{ unread_messages }}</span>{% endif %}
+        </a>
+    </li>
+</ul>
+
+<div class="row g-4">
+
+    <div class="col-xl-5">
+        <div class="admin-panel p-0 overflow-hidden">
+            {% for message in messages %}
+            <a href="{{ url_for('admin.admin_messages', open=message.id, show=show) }}"
+               class="message-item {% if not message.is_read %}unread{% endif %} {% if selected and selected.id == message.id %}active{% endif %}">
+                <div class="d-flex justify-content-between">
+                    <strong>{{ message.name }}</strong>
+                    <small class="text-muted">{{ message.created_at.strftime('%d %b') }}</small>
+                </div>
+                <div class="text-truncate">{{ message.subject or "(no subject)" }}</div>
+                <small class="text-muted text-truncate d-block">{{ message.message }}</small>
+            </a>
+            {% else %}
+            <p class="text-muted text-center py-5 mb-0">{{ "No unread messages." if show == "unread" else "No messages yet." }}</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="col-xl-7">
+        {% if selected %}
+        <div class="admin-panel">
+            <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                <div>
+                    <h5 class="fw-bold mb-1">{{ selected.subject or "(no subject)" }}</h5>
+                    <small class="text-muted">{{ selected.created_at.strftime('%A %d %B %Y, %I:%M %p') }}</small>
+                </div>
+                <div class="d-flex gap-2">
+                    <form method="POST" action="{{ url_for('admin.mark_message_unread', message_id=selected.id) }}">
+                        <button class="btn btn-sm btn-outline-dark" title="Mark as unread"><i class="bi bi-envelope"></i></button>
+                    </form>
+                    <form method="POST" action="{{ url_for('admin.delete_message', message_id=selected.id) }}"
+                          onsubmit="return confirm('Delete this message?');">
+                        <button class="btn btn-sm btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="message-sender mb-3">
+                <strong>{{ selected.name }}</strong>
+                <a href="mailto:{{ selected.email }}" class="d-block">{{ selected.email }}</a>
+                {% if selected.phone %}<a href="tel:{{ selected.phone }}" class="d-block">{{ selected.phone }}</a>{% endif %}
+            </div>
+
+            <p style="white-space:pre-line">{{ selected.message }}</p>
+
+            <a href="mailto:{{ selected.email }}?subject={{ ('Re: ' ~ (selected.subject or 'Your message to Fortune Needles'))|urlencode }}"
+               class="btn btn-admin">
+                <i class="bi bi-reply me-1"></i> Reply by Email
+            </a>
+        </div>
+        {% else %}
+        <div class="admin-panel text-center text-muted py-5">
+            <i class="bi bi-envelope-open fs-1 d-block mb-2"></i>
+            Select a message to read it.
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+{% endblock %}

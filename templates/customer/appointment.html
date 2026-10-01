@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}Book Appointment{% endblock %}
+
+{% block content %}
+
+<section class="container py-5 mt-5">
+
+    <div class="text-center mb-4">
+        <h1>Book Appointment</h1>
+        <p class="lead">Schedule a fitting or consultation with us</p>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+
+            <form method="POST" class="card shadow-sm p-4 border-0">
+
+                <div class="mb-3">
+                    <label class="form-label">Full Name</label>
+                    <input
+                        type="text"
+                        name="name"
+                        class="form-control"
+                        value="{{ current_user.first_name }} {{ current_user.last_name }}"
+                        required
+                    >
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Phone Number</label>
+                    <input
+                        type="text"
+                        name="phone"
+                        class="form-control"
+                        value="{{ current_user.phone or '' }}"
+                        required
+                    >
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Appointment Date</label>
+                    <input
+                        type="date"
+                        name="appointment_date"
+                        class="form-control"
+                        required
+                    >
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Appointment Time</label>
+                    <input
+                        type="time"
+                        name="appointment_time"
+                        class="form-control"
+                        required
+                    >
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Service</label>
+                    <select name="service" class="form-select" required>
+                        <option value="">Select a service</option>
+                        {% for service in services %}
+                        <option value="{{ service.name }}">{{ service.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Notes</label>
+                    <textarea
+                        name="notes"
+                        class="form-control"
+                        rows="4"
+                        placeholder="Tell us anything we should know about your appointment"
+                    ></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100">
+                    Book Now
+                </button>
+
+            </form>
+
+        </div>
+    </div>
+
+</section>
+
+{% endblock %}

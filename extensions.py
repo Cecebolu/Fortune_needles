@@ -8,6 +8,6 @@ login_manager = LoginManager()
 migrate = Migrate()
 
 # Login settings
-login_manager.login_view = "login"
+login_manager.login_view = "auth.login"
 login_manager.login_message = "Please log in to continue."
 login_manager.login_message_category = "info"

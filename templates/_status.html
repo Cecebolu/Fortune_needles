@@ -1,0 +1,24 @@
+{# Customer-facing status labels: colour + icon + word, so they stand out #}
+
+{% set STATUS_STYLES = {
+    "Pending":     ("warning", "bi-hourglass-split"),
+    "Submitted":   ("warning", "bi-hourglass-split"),
+    "Received":    ("warning", "bi-inbox-fill"),
+    "Confirmed":   ("success", "bi-check-circle-fill"),
+    "Reviewed":    ("info", "bi-eye-fill"),
+    "In Progress": ("info", "bi-scissors"),
+    "Ready":       ("primary", "bi-bag-check-fill"),
+    "Paid":        ("success", "bi-check-circle-fill"),
+    "Completed":   ("success", "bi-check2-all"),
+    "Delivered":   ("success", "bi-truck"),
+    "Cancelled":   ("danger", "bi-x-circle-fill"),
+    "Rejected":    ("danger", "bi-x-circle-fill"),
+    "Refunded":    ("secondary", "bi-arrow-counterclockwise"),
+} %}
+
+{% macro status_pill(status) %}
+{% set color, icon = STATUS_STYLES.get(status, ("secondary", "bi-circle")) %}
+<span class="status-pill status-{{ color }}">
+    <i class="bi {{ icon }}" aria-hidden="true"></i>{{ status }}
+</span>
+{% endmacro %}
