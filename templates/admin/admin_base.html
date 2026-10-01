@@ -64,15 +64,19 @@
 <div class="admin-wrapper">
 
     <!-- ================= SIDEBAR ================= -->
-    <aside class="admin-sidebar">
+    <aside class="admin-sidebar offcanvas-lg offcanvas-start" id="adminSidebar" tabindex="-1" aria-label="Admin menu">
 
-        <a href="{{ url_for('admin.admin_dashboard') }}" class="admin-logo">
-            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Fortune Needles">
-            <div>
-                <h3>Fortune Needles</h3>
-                <p>Admin Panel</p>
-            </div>
-        </a>
+        <div class="d-flex align-items-start">
+            <a href="{{ url_for('admin.admin_dashboard') }}" class="admin-logo flex-grow-1">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Fortune Needles">
+                <div>
+                    <h3>Fortune Needles</h3>
+                    <p>Admin Panel</p>
+                </div>
+            </a>
+            <button type="button" class="btn-close btn-close-white d-lg-none mt-2 me-3"
+                    data-bs-dismiss="offcanvas" data-bs-target="#adminSidebar" aria-label="Close menu"></button>
+        </div>
 
         {% for section, links in menu %}
         <p class="admin-menu-label">{{ section }}</p>
@@ -116,7 +120,11 @@
     <main class="admin-content">
 
         <div class="admin-topbar">
-            <span class="text-muted">
+            <button type="button" class="btn admin-menu-toggle d-lg-none" data-bs-toggle="offcanvas"
+                    data-bs-target="#adminSidebar" aria-controls="adminSidebar" aria-label="Open menu">
+                <i class="bi bi-list"></i>
+            </button>
+            <span class="text-muted d-none d-lg-inline">
                 <i class="bi bi-calendar3 me-2"></i>{{ now.strftime('%A, %d %B %Y') }}
             </span>
             <div class="d-flex align-items-center gap-3">
@@ -160,7 +168,7 @@
 
                 <span class="admin-user">
                     <i class="bi bi-person-circle"></i>
-                    {{ current_user.first_name }} {{ current_user.last_name }}
+                    <span class="d-none d-sm-inline">{{ current_user.first_name }} {{ current_user.last_name }}</span>
                 </span>
 
             </div>

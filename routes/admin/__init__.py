@@ -5,6 +5,7 @@ from functools import wraps
 
 from flask import Blueprint, request, abort, current_app
 from flask_login import login_required, current_user
+from PIL import Image, ImageOps, UnidentifiedImageError
 from werkzeug.utils import secure_filename
 
 from extensions import db
@@ -13,6 +14,9 @@ from models import ContactMessage, Notification
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 
 ALLOWED_IMAGE_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
+
+MAX_IMAGE_SIDE = 1600   # longest side of an uploaded photo, in pixels
+IMAGE_QUALITY = 80      # WebP quality (0-100)
 
 ORDER_STATUSES = ["Received", "In Progress", "Ready", "Delivered", "Cancelled"]
 PAYMENT_STATUSES = ["Pending", "Paid", "Refunded"]
@@ -68,7 +72,8 @@ def admin_required(view):
 
 
 def save_image(file, subfolder):
-    """Save an uploaded image under static/uploads/<subfolder>. Returns the filename, or None."""
+    """Save an uploaded image under static/uploads/<subfolder>, resized and compressed.
+    Returns the new filename, or None if the file is not a usable image."""
 
     if not file or not file.filename:
         return None
@@ -78,12 +83,29 @@ def save_image(file, subfolder):
     if extension not in ALLOWED_IMAGE_EXTENSIONS:
         return None
 
-    filename = f"{uuid.uuid4().hex}_{secure_filename(file.filename)}"
+    try:
+        image = Image.open(file.stream)
+        image.load()
+    except (UnidentifiedImageError, OSError):
+        return None
+
+    # Phone photos are often stored sideways with a "rotate me" note; apply it
+    image = ImageOps.exif_transpose(image)
+
+    # Shrink big photos; small ones are left at their size
+    image.thumbnail((MAX_IMAGE_SIDE, MAX_IMAGE_SIDE), Image.LANCZOS)
+
+    if image.mode not in ("RGB", "RGBA"):
+        image = image.convert("RGBA" if "transparency" in image.info or image.mode in ("LA", "P") else "RGB")
+
+    name = os.path.splitext(secure_filename(file.filename))[0][:60] or "photo"
+    filename = f"{uuid.uuid4().hex}_{name}.webp"
 
     folder = os.path.join(current_app.config["UPLOAD_FOLDER"], subfolder)
     os.makedirs(folder, exist_ok=True)
 
-    file.save(os.path.join(folder, filename))
+    # WebP is much smaller than JPEG/PNG; saving fresh also drops hidden data such as GPS location
+    image.save(os.path.join(folder, filename), "WEBP", quality=IMAGE_QUALITY, method=6)
 
     return filename
 

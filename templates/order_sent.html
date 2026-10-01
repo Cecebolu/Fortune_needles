@@ -32,13 +32,13 @@
                     {% for item in order.items %}
                     <div class="d-flex justify-content-between small mb-2">
                         <span>{{ item.quantity }} x {{ item.product.name }}</span>
-                        <span>KES {{ "{:,.0f}".format(item.subtotal) }}</span>
+                        <span class="text-nowrap ms-3">KES {{ "{:,.0f}".format(item.subtotal) }}</span>
                     </div>
                     {% endfor %}
                     <hr class="my-2">
                     <div class="d-flex justify-content-between fw-bold">
                         <span>Total</span>
-                        <span>KES {{ "{:,.0f}".format(order.total) }}</span>
+                        <span class="text-nowrap ms-3">KES {{ "{:,.0f}".format(order.total) }}</span>
                     </div>
                 </div>
 

@@ -588,12 +588,6 @@ a{
 
 @media(max-width:991px){
 
-    .admin-sidebar{
-        width:100%;
-        position:relative;
-        height:auto;
-    }
-
     .admin-content{
         margin-left:0;
         padding:25px;
@@ -2255,6 +2249,11 @@ a{
     z-index:1;
 }
 
+/* Layer for a needle stitching around a button, above the page content */
+.thread-canvas-front{
+    z-index:2;
+}
+
 
 /* ==========================================
    PASSWORD RESET
@@ -2284,4 +2283,117 @@ a{
     font-size:12px;
     word-break:break-all;
     background:#f7f7f7;
+}
+
+
+/* ==========================================
+   PHONE & TABLET LAYOUT
+========================================== */
+
+/* Admin: on computers the sidebar is fixed on the left (Bootstrap's offcanvas-lg
+   would otherwise make it transparent); on phones it slides in from the left */
+@media (min-width:992px){
+    .admin-sidebar.offcanvas-lg{
+        background-color:var(--admin-black) !important;
+        overflow-y:auto;
+    }
+}
+
+@media (max-width:991.98px){
+
+    .admin-sidebar.offcanvas-lg{
+        width:280px;
+        background:var(--admin-black);
+        overflow-y:auto;
+    }
+
+    .admin-topbar{
+        position:sticky;
+        top:0;
+        z-index:20;
+        margin:-20px -16px 20px;
+        padding:10px 16px;
+        background:#f5f5f5;
+    }
+
+    .admin-menu-toggle{
+        width:44px;
+        height:44px;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        font-size:26px;
+        background:#111;
+        color:var(--admin-gold);
+        border-radius:12px;
+    }
+
+    .admin-menu-toggle:hover,
+    .admin-menu-toggle:focus{
+        background:#000;
+        color:var(--admin-gold);
+    }
+
+    .admin-header{
+        flex-direction:row;
+        flex-wrap:wrap;
+        text-align:left;
+        gap:12px;
+    }
+
+    .admin-header h1{
+        font-size:26px;
+    }
+
+}
+
+/* Public & customer pages on phones */
+@media (max-width:576px){
+
+    /* Less empty space between the menu and the page title */
+    main > section.py-5.mt-5{
+        margin-top:0 !important;
+        padding-top:1rem !important;
+    }
+
+    main > section h1{
+        font-size:32px;
+    }
+
+    /* The login/sign-up photo is small, so wash it out more where it is stretched tall */
+    .auth-section{
+        padding:100px 12px 40px;
+        background:
+            linear-gradient(rgba(255,255,255,.55), rgba(255,255,255,.55)),
+            url("../images/sewing-background.jpg") center top / cover no-repeat;
+    }
+
+    .auth-card{
+        padding:28px 22px;
+    }
+
+    .hero h5{
+        font-size:14px;
+        letter-spacing:2px;
+    }
+
+    .section-heading{
+        margin-bottom:36px;
+    }
+
+}
+
+
+/* Admin tables on phones: keep each row on one line and swipe sideways */
+@media (max-width:991.98px){
+
+    .admin-content .table-responsive th,
+    .admin-content .table-responsive td{
+        white-space:nowrap;
+    }
+
+    .admin-content .table-responsive{
+        -webkit-overflow-scrolling:touch;
+    }
+
 }
