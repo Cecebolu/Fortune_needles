@@ -493,6 +493,14 @@ class ContactMessage(db.Model):
         default=False
     )
 
+    # The shop item the message is about ("Ask a question" / "Ask us when it's back")
+    product_id = db.Column(
+        db.Integer,
+        db.ForeignKey("products.id", ondelete="SET NULL")
+    )
+
+    product = db.relationship("Product")
+
     created_at = db.Column(
         db.DateTime,
         default=datetime.utcnow

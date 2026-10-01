@@ -2432,3 +2432,46 @@ a{
 .admin-search-clear:hover{
     color:#000;
 }
+
+
+/* A shop item attached to a contact message */
+.enquiry-item{
+    position:relative;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:12px;
+    background:#fbf8f1;
+    border:1px solid #f0e6c8;
+    border-radius:12px;
+}
+
+.enquiry-item img,
+.enquiry-item-icon{
+    width:64px;
+    height:64px;
+    flex-shrink:0;
+    object-fit:contain;
+    background:#fff;
+    border-radius:10px;
+}
+
+.enquiry-item-icon{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    font-size:26px;
+    color:#b8860b;
+}
+
+.enquiry-item-remove{
+    position:absolute;
+    top:6px;
+    right:10px;
+    color:#999;
+    font-size:13px;
+}
+
+.enquiry-item-remove:hover{
+    color:#000;
+}

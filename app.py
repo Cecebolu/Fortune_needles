@@ -42,6 +42,7 @@ def add_missing_columns():
 
     new_columns = {
         "site_settings": {"order_whatsapp": "VARCHAR(30)"},
+        "contact_messages": {"product_id": "INTEGER REFERENCES products(id) ON DELETE SET NULL"},
     }
 
     inspector = inspect(db.engine)

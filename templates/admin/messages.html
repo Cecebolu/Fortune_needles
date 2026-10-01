@@ -29,7 +29,9 @@
                     <strong>{{ message.name }}</strong>
                     <small class="text-muted">{{ message.created_at.strftime('%d %b') }}</small>
                 </div>
-                <div class="text-truncate">{{ message.subject or "(no subject)" }}</div>
+                <div class="text-truncate">
+                    {% if message.product %}<i class="bi bi-bag me-1 text-muted" title="About a shop item"></i>{% endif %}{{ message.subject or "(no subject)" }}
+                </div>
                 <small class="text-muted text-truncate d-block">{{ message.message }}</small>
             </a>
             {% else %}
@@ -62,6 +64,29 @@
                 <a href="mailto:{{ selected.email }}" class="d-block">{{ selected.email }}</a>
                 {% if selected.phone %}<a href="tel:{{ selected.phone }}" class="d-block">{{ selected.phone }}</a>{% endif %}
             </div>
+
+            {% if selected.product %}
+            {% set item = selected.product %}
+            {% set label, color = item.stock_status %}
+            <div class="enquiry-item mb-3">
+                {% if item.image %}
+                <img src="{{ url_for('static', filename='uploads/products/' + item.image) }}" alt="{{ item.name }}">
+                {% else %}
+                <span class="enquiry-item-icon"><i class="bi bi-bag"></i></span>
+                {% endif %}
+                <div class="min-w-0 flex-grow-1">
+                    <small class="text-muted d-block">About this item</small>
+                    <strong class="d-block text-truncate">{{ item.name }}</strong>
+                    <small class="d-block">
+                        KES {{ "{:,.0f}".format(item.price) }} · {{ item.stock }} in stock
+                        <span class="badge rounded-pill text-bg-{{ color }} ms-1">{{ label }}</span>
+                    </small>
+                </div>
+                <a href="{{ url_for('admin.edit_product', product_id=item.id) }}" class="btn btn-sm btn-outline-dark">
+                    <i class="bi bi-pencil me-1"></i>Edit item
+                </a>
+            </div>
+            {% endif %}
 
             <p style="white-space:pre-line">{{ selected.message }}</p>
 

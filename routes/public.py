@@ -57,8 +57,17 @@ def shop():
     return render_template("shop.html", products=products, ratings=ratings)
 
 
+def enquiry_product(product_id):
+    """The shop item a message is about, if it is a real, visible product."""
+
+    product = db.session.get(Product, product_id) if product_id else None
+    return product if product and product.is_available else None
+
+
 @public_bp.route("/contact", methods=["GET", "POST"])
 def contact():
+
+    product = enquiry_product(request.values.get("product", type=int))
 
     if request.method == "POST":
 
@@ -76,14 +85,15 @@ def contact():
 
         if not (name and email and subject and message):
             flash("Please fill in all the required fields.", "danger")
-            return redirect(url_for("public.contact"))
+            return redirect(url_for("public.contact", product=product.id if product else None))
 
         contact_message = ContactMessage(
             name=name,
             email=email,
             phone=phone,
             subject=subject,
-            message=message
+            message=message,
+            product_id=product.id if product else None
         )
         db.session.add(contact_message)
         db.session.flush()
@@ -91,7 +101,7 @@ def contact():
         Notification.add(
             "message",
             "New contact message",
-            f"{name}: {subject}",
+            f"{name}: {subject}" + (f" ({product.name})" if product and product.name not in subject else ""),
             url_for("admin.admin_messages", open=contact_message.id)
         )
 
@@ -101,4 +111,10 @@ def contact():
 
         return redirect(url_for("public.contact"))
 
-    return render_template("contact.html")
+    subject = ""
+    if product:
+        subject = (f"Tell me when {product.name} is back in stock"
+                   if request.args.get("about") == "restock" or not product.in_stock
+                   else f"Question about {product.name}")
+
+    return render_template("contact.html", product=product, subject=subject)
