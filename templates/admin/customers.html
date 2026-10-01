@@ -7,10 +7,13 @@
 
 {{ page_header("Customers", customers|length ~ " registered customer" ~ ("" if customers|length == 1 else "s") ~ (" matching \"" ~ search ~ "\"" if search else "")) }}
 
-<form method="GET" class="admin-search mb-4">
-    <i class="bi bi-search"></i>
-    <input type="text" name="q" value="{{ search }}" class="form-control" placeholder="Search by name, username, email or phone">
-</form>
+<div class="mb-4"><form method="GET" class="admin-search" role="search" data-live-search>
+    <i class="bi bi-search" aria-hidden="true"></i>
+    <input type="search" name="q" value="{{ search }}" class="form-control" placeholder="Search by name, username, email or phone"
+           aria-label="Search by name, username, email or phone" autocomplete="off">
+    {% if search %}<a href="?{{ request.args|dict_without('q') }}" class="admin-search-clear" title="Clear search" aria-label="Clear search"><i class="bi bi-x-lg"></i></a>{% endif %}
+    <button type="submit" class="btn btn-dark btn-sm admin-search-go">Search</button>
+</form></div>
 
 <div class="admin-panel">
     <div class="table-responsive">

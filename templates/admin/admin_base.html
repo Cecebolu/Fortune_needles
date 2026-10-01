@@ -192,6 +192,42 @@
 
 {% include "_logout_modal.html" %}
 
+<script>
+// Admin search boxes: filter the table rows instantly while typing.
+// Every word must appear somewhere in the row; phone numbers match with or without spaces/+254.
+document.querySelectorAll("form[data-live-search]").forEach(function (form) {
+    const input = form.querySelector("input[name=q]");
+    const panel = form.closest(".admin-content").querySelector(".admin-panel tbody");
+    if (!input || !panel) return;
+
+    const rows = Array.from(panel.querySelectorAll("tr")).filter(function (row) { return !row.querySelector("td[colspan]"); });
+    const digits = function (text) { return text.replace(/\D/g, "").replace(/^254/, "").replace(/^0+/, ""); };
+
+    const noMatch = document.createElement("tr");
+    noMatch.innerHTML = '<td colspan="12" class="text-center text-muted py-5">No matches. Press Enter to search everything.</td>';
+    noMatch.hidden = true;
+    panel.appendChild(noMatch);
+
+    input.addEventListener("input", function () {
+        const value = input.value.trim().toLowerCase();
+        // A search that is only a phone number ("+254 719 164 015") is one number, not four words
+        const words = /^[\d\s+()-]+$/.test(value) ? [value.replace(/\s/g, "")] : value.split(/\s+/).filter(Boolean);
+        let shown = 0;
+        rows.forEach(function (row) {
+            const text = row.textContent.toLowerCase();
+            const rowDigits = digits(text);
+            const match = words.every(function (word) {
+                const d = digits(word);
+                return text.includes(word) || (d.length >= 3 && rowDigits.includes(d));
+            });
+            row.hidden = !match;
+            if (match) shown++;
+        });
+        noMatch.hidden = shown > 0 || !rows.length;
+    });
+});
+</script>
+
 <!-- New-notification pop-ups -->
 <div class="toast-container position-fixed bottom-0 end-0 p-3 js-toasts"></div>
 

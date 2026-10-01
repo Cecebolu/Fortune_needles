@@ -2397,3 +2397,38 @@ a{
     }
 
 }
+
+
+/* Admin search box: search button + clear (x) */
+.admin-search{
+    display:flex;
+    align-items:center;
+    max-width:460px;
+}
+
+.admin-search .form-control{
+    padding-right:120px;
+}
+
+.admin-search input[type=search]::-webkit-search-cancel-button{
+    display:none;
+}
+
+.admin-search-go{
+    position:absolute;
+    right:5px;
+    border-radius:999px;
+    padding:4px 14px;
+}
+
+.admin-search-clear{
+    position:absolute;
+    right:84px;
+    color:#888;
+    font-size:14px;
+    padding:4px 6px;
+}
+
+.admin-search-clear:hover{
+    color:#000;
+}

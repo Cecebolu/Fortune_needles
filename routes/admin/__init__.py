@@ -1,4 +1,5 @@
 import os
+import re
 import uuid
 from datetime import datetime
 from functools import wraps
@@ -7,6 +8,8 @@ from flask import Blueprint, request, abort, current_app
 from flask_login import login_required, current_user
 from PIL import Image, ImageOps, UnidentifiedImageError
 from werkzeug.utils import secure_filename
+
+from sqlalchemy import and_, or_, func
 
 from extensions import db
 from models import ContactMessage, Notification
@@ -37,6 +40,13 @@ def inject_admin_globals():
         "recent_notifications": Notification.query.order_by(Notification.created_at.desc()).limit(6).all(),
         "latest_notification_id": db.session.query(db.func.max(Notification.id)).scalar() or 0
     }
+
+
+@admin_bp.app_template_filter("dict_without")
+def dict_without(args, key):
+    """The current query string minus one key, e.g. to clear a search but keep the status filter."""
+    from urllib.parse import urlencode
+    return urlencode([(k, v) for k, v in args.items(multi=True) if k != key])
 
 
 @admin_bp.app_template_filter("timeago")
@@ -132,6 +142,32 @@ def form_date(name):
         return datetime.strptime(value, "%Y-%m-%d").date()
     except ValueError:
         return None
+
+
+def search_condition(search, columns, phone_columns=()):
+    """Every word typed must match one of the columns (so "flowers okuh" finds Flowers Okuh).
+    Phone numbers match whatever their spacing or prefix: 0719 164 015, +254719164015, 0719164015."""
+
+    conditions = []
+
+    # A search that is only a phone number ("+254 719 164 015") is one number, not four words
+    words = [search.replace(" ", "")] if re.fullmatch(r"[\d\s+()-]+", search.strip()) else search.split()
+
+    for word in words:
+        options = [column.ilike(f"%{word}%") for column in columns]
+
+        digits = re.sub(r"\D", "", word)
+        if digits.startswith("254"):
+            digits = digits[3:]
+        digits = digits.lstrip("0")
+        if len(digits) >= 3:
+            for column in phone_columns:
+                stored = func.replace(func.replace(func.replace(column, " ", ""), "-", ""), "+", "")
+                options.append(stored.ilike(f"%{digits}%"))
+
+        conditions.append(or_(*options))
+
+    return and_(*conditions)
 
 
 def form_float(name):

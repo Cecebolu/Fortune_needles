@@ -1,9 +1,8 @@
 from flask import render_template, request, redirect, url_for, flash
-from sqlalchemy import or_
 
 from extensions import db
 from models import User, Product, Order, OrderItem
-from routes.admin import admin_bp, admin_required, form_date, ORDER_STATUSES, PAYMENT_STATUSES
+from routes.admin import admin_bp, admin_required, form_date, search_condition, ORDER_STATUSES, PAYMENT_STATUSES
 
 
 @admin_bp.route("/orders")
@@ -19,12 +18,10 @@ def admin_orders():
         query = query.filter(Order.order_status == status)
 
     if search:
-        like = f"%{search}%"
-        query = query.filter(or_(
-            Order.tracking_code.ilike(like),
-            User.first_name.ilike(like),
-            User.last_name.ilike(like),
-            User.phone.ilike(like)
+        query = query.filter(search_condition(
+            search,
+            [Order.tracking_code, User.first_name, User.last_name, User.username, User.phone],
+            phone_columns=[User.phone]
         ))
 
     orders = query.order_by(Order.created_at.desc()).all()

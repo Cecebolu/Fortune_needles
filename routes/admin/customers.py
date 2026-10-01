@@ -1,11 +1,10 @@
 from urllib.parse import quote
 
 from flask import render_template, request, redirect, url_for, flash, session
-from sqlalchemy import or_
 
 from extensions import db
 from models import User, Measurement
-from routes.admin import admin_bp, admin_required, form_float
+from routes.admin import admin_bp, admin_required, form_float, search_condition
 from utils import make_reset_token, whatsapp_digits, RESET_LINK_HOURS
 
 MEASUREMENT_FIELDS = [
@@ -25,13 +24,10 @@ def search_customers(search):
     query = User.query.filter_by(role="customer")
 
     if search:
-        like = f"%{search}%"
-        query = query.filter(or_(
-            User.first_name.ilike(like),
-            User.last_name.ilike(like),
-            User.username.ilike(like),
-            User.email.ilike(like),
-            User.phone.ilike(like)
+        query = query.filter(search_condition(
+            search,
+            [User.first_name, User.last_name, User.username, User.email, User.phone],
+            phone_columns=[User.phone]
         ))
 
     return query.order_by(User.created_at.desc()).all()
