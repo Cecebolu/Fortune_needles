@@ -287,6 +287,23 @@ class Measurement(db.Model):
 # CUSTOM DESIGN REQUESTS
 # =====================================================
 
+# The stages a custom outfit goes through: (name, icon, what it means for the customer)
+DESIGN_STAGES = [
+    ("Submitted", "bi-send", "We have received your design request."),
+    ("Quoted", "bi-tag", "Price and ready date agreed."),
+    ("Measured", "bi-rulers", "Your measurements have been taken."),
+    ("Cutting", "bi-scissors", "Your fabric is being cut."),
+    ("Sewing", "bi-stars", "Your outfit is being sewn."),
+    ("Fitting", "bi-person-check", "Time to try it on."),
+    ("Ready", "bi-bag-check", "Your outfit is ready to collect."),
+    ("Collected", "bi-heart", "Collected. Enjoy wearing it!"),
+]
+DESIGN_STAGE_NAMES = [name for name, _icon, _text in DESIGN_STAGES]
+
+# Older design statuses, renamed to the matching stage
+OLD_DESIGN_STATUSES = {"Reviewed": "Quoted", "In Progress": "Sewing", "Completed": "Collected"}
+
+
 class CustomDesign(db.Model):
     __tablename__ = "custom_designs"
 
@@ -328,8 +345,53 @@ class CustomDesign(db.Model):
         default=datetime.utcnow
     )
 
+    updates = db.relationship(
+        "DesignUpdate",
+        backref="design",
+        lazy=True,
+        cascade="all, delete-orphan",
+        order_by="DesignUpdate.created_at"
+    )
+
+    @property
+    def stage_index(self):
+        """Position in DESIGN_STAGES, or -1 if rejected."""
+        return DESIGN_STAGE_NAMES.index(self.status) if self.status in DESIGN_STAGE_NAMES else -1
+
+    @property
+    def next_stage(self):
+        i = self.stage_index
+        return DESIGN_STAGE_NAMES[i + 1] if 0 <= i < len(DESIGN_STAGE_NAMES) - 1 else None
+
+    def reached(self, stage):
+        """The latest update that moved this design to `stage`, if any."""
+        return next((u for u in reversed(self.updates) if u.stage == stage), None)
+
     def __repr__(self):
         return f"<CustomDesign {self.id}>"
+
+
+class DesignUpdate(db.Model):
+    """One step on a custom outfit's journey, with an optional note to the customer."""
+
+    __tablename__ = "design_updates"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    design_id = db.Column(
+        db.Integer,
+        db.ForeignKey("custom_designs.id", ondelete="CASCADE"),
+        nullable=False
+    )
+
+    stage = db.Column(db.String(50), nullable=False)
+
+    note = db.Column(db.Text)
+
+    created_at = db.Column(
+        db.DateTime,
+        default=datetime.utcnow
+    )
 
 
 # =====================================================
@@ -741,6 +803,7 @@ class Notification(db.Model):
         "customer": "bi-person-plus",
         "review": "bi-star-fill",
         "password": "bi-key-fill",
+        "restock": "bi-box-seam",
     }
 
     @property
@@ -783,3 +846,99 @@ class DismissedAlert(db.Model):
         db.DateTime,
         default=datetime.utcnow
     )
+
+
+
+# =====================================================
+# UPDATES FOR CUSTOMERS (their bell / Updates page)
+# =====================================================
+
+class CustomerAlert(db.Model):
+    __tablename__ = "customer_alerts"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False
+    )
+
+    kind = db.Column(db.String(30), nullable=False)
+
+    title = db.Column(db.String(150), nullable=False)
+
+    message = db.Column(db.Text)
+
+    link = db.Column(db.String(255))
+
+    is_read = db.Column(db.Boolean, default=False)
+
+    # How else it was delivered, besides the website
+    emailed = db.Column(db.Boolean, default=False)
+    texted = db.Column(db.Boolean, default=False)
+
+    created_at = db.Column(
+        db.DateTime,
+        default=datetime.utcnow
+    )
+
+    user = db.relationship("User")
+
+    ICONS = {
+        "design": "bi-scissors",
+        "appointment": "bi-calendar-check",
+        "order": "bi-bag-check",
+        "restock": "bi-box-seam",
+    }
+
+    @property
+    def icon(self):
+        return self.ICONS.get(self.kind, "bi-bell")
+
+
+# =====================================================
+# BACK-IN-STOCK WAITING LIST
+# =====================================================
+
+class StockAlert(db.Model):
+    __tablename__ = "stock_alerts"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    product_id = db.Column(
+        db.Integer,
+        db.ForeignKey("products.id", ondelete="CASCADE"),
+        nullable=False
+    )
+
+    # A logged-in customer, or a visitor's contact details
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.id", ondelete="CASCADE")
+    )
+    name = db.Column(db.String(150))
+    email = db.Column(db.String(150))
+    phone = db.Column(db.String(30))
+
+    created_at = db.Column(
+        db.DateTime,
+        default=datetime.utcnow
+    )
+
+    notified_at = db.Column(db.DateTime)
+
+    product = db.relationship("Product")
+    user = db.relationship("User")
+
+    @property
+    def contact_name(self):
+        return f"{self.user.first_name} {self.user.last_name}" if self.user else (self.name or "Customer")
+
+    @property
+    def contact_phone(self):
+        return self.user.phone if self.user else self.phone
+
+    @property
+    def contact_email(self):
+        return self.user.email if self.user else self.email

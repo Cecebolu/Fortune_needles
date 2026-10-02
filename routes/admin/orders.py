@@ -2,6 +2,7 @@ from flask import render_template, request, redirect, url_for, flash
 
 from extensions import db
 from models import User, Product, Order, OrderItem
+from notify import alert_customer, notify_if_restocked
 from routes.admin import admin_bp, admin_required, form_date, search_condition, ORDER_STATUSES, PAYMENT_STATUSES
 
 
@@ -127,13 +128,30 @@ def order_detail(order_id):
         if new_status == "Cancelled" and order.order_status != "Cancelled":
             for item in order.items:
                 if item.product:
+                    old_stock = item.product.stock
                     item.product.stock += item.quantity
+                    notify_if_restocked(item.product, old_stock)
+
+        status_changed = new_status in ORDER_STATUSES and new_status != order.order_status
+        paid_now = new_payment == "Paid" and order.payment_status != "Paid"
 
         if new_status in ORDER_STATUSES:
             order.order_status = new_status
 
         if new_payment in PAYMENT_STATUSES:
             order.payment_status = new_payment
+
+        messages = {
+            "Ready": (f"Order {order.tracking_code} is ready", "Your order is ready for collection or delivery."),
+            "Delivered": (f"Order {order.tracking_code} delivered", "Thank you for shopping with Fortune Needles!"),
+            "Cancelled": (f"Order {order.tracking_code} was cancelled", "Contact us if you have any questions."),
+        }
+        if status_changed and order.order_status in messages:
+            title, message = messages[order.order_status]
+            alert_customer(order.customer, "order", title, message, url_for("customer.dashboard"))
+        if paid_now:
+            alert_customer(order.customer, "order", f"Payment received for {order.tracking_code}",
+                           f"We've received KES {order.total:,.0f}. Thank you!", url_for("customer.dashboard"))
 
         order.delivery_date = form_date("delivery_date")
 

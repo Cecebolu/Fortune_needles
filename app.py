@@ -10,7 +10,9 @@ from routes.customer import customer_bp
 from routes.admin import admin_bp
 from routes.cart import cart_bp, cart_count
 
-from models import User, SiteSettings
+from flask_login import current_user
+
+from models import User, SiteSettings, CustomDesign, CustomerAlert, OLD_DESIGN_STATUSES
 
 
 def create_app():
@@ -30,7 +32,10 @@ def create_app():
 
     @app.context_processor
     def inject_site_settings():
-        return {"site": SiteSettings.get(), "cart_count": cart_count()}
+        unread_updates = 0
+        if current_user.is_authenticated and current_user.role != "admin":
+            unread_updates = CustomerAlert.query.filter_by(user_id=current_user.id, is_read=False).count()
+        return {"site": SiteSettings.get(), "cart_count": cart_count(), "unread_updates": unread_updates}
 
     return app
 
@@ -58,10 +63,20 @@ def add_missing_columns():
     db.session.commit()
 
 
+def rename_old_design_statuses():
+    """Design requests used to have Reviewed / In Progress / Completed; map them onto the new stages."""
+
+    for old, new in OLD_DESIGN_STATUSES.items():
+        CustomDesign.query.filter_by(status=old).update({"status": new})
+
+    db.session.commit()
+
+
 with app.app_context():
 
     db.create_all()
     add_missing_columns()
+    rename_old_design_statuses()
 
     if not User.query.filter_by(username="admin").first():
 

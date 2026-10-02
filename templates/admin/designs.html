@@ -5,7 +5,7 @@
 
 {% block content %}
 
-{{ page_header("Design Requests", "Review custom outfit requests, give a price quote and track progress.") }}
+{{ page_header("Design Requests", "Move each outfit through its stages. The customer is told at every step.") }}
 
 {{ filter_tabs("admin.admin_designs", statuses, status) }}
 
@@ -37,28 +37,72 @@
                 <dt class="col-4 text-muted fw-normal">Notes</dt><dd class="col-8" style="white-space:pre-line">{{ design.description or "—" }}</dd>
             </dl>
 
-            <form method="POST" action="{{ url_for('admin.update_design', design_id=design.id) }}" class="mt-auto pt-3 border-top">
-                <div class="row g-2 mb-2">
-                    <div class="col-12">
-                        <select name="status" class="form-select form-select-sm">
-                            {% for option in statuses %}
-                            <option value="{{ option }}" {% if option == design.status %}selected{% endif %}>{{ option }}</option>
-                            {% endfor %}
-                        </select>
+            <!-- Journey so far -->
+            {% if design.updates %}
+            <ul class="mini-timeline mb-3">
+                {% for update in design.updates|reverse %}
+                {% if loop.index <= 4 %}
+                <li>
+                    <strong>{{ update.stage }}</strong>
+                    <small class="text-muted">{{ update.created_at.strftime('%d %b') }}</small>
+                    {% if update.note %}<div class="small text-muted">{{ update.note }}</div>{% endif %}
+                </li>
+                {% endif %}
+                {% endfor %}
+            </ul>
+            {% endif %}
+
+            <div class="mt-auto pt-3 border-top">
+
+                {% if design.next_stage %}
+                <form method="POST" action="{{ url_for('admin.advance_design', design_id=design.id) }}" class="mb-3">
+                    <div class="input-group input-group-sm">
+                        <input type="text" name="note" class="form-control" maxlength="300"
+                               placeholder="Note to customer (optional)" aria-label="Note to customer">
+                        <button class="btn btn-admin btn-sm">Next: {{ design.next_stage }} <i class="bi bi-arrow-right"></i></button>
                     </div>
-                    <div class="col-6">
-                        <label class="form-label small mb-1">Quote (KES)</label>
-                        <input type="number" step="1" min="0" name="estimated_price" class="form-control form-control-sm"
-                               value="{{ '%.0f'|format(design.estimated_price) if design.estimated_price else '' }}">
-                    </div>
-                    <div class="col-6">
-                        <label class="form-label small mb-1">Ready by</label>
-                        <input type="date" name="expected_completion" class="form-control form-control-sm"
-                               value="{{ design.expected_completion.isoformat() if design.expected_completion else '' }}">
-                    </div>
-                </div>
-                <button class="btn btn-admin btn-sm w-100">Save</button>
-            </form>
+                </form>
+                {% endif %}
+
+                <details class="design-more">
+                    <summary class="small text-muted">Change stage, price or ready date</summary>
+                    <form method="POST" action="{{ url_for('admin.update_design', design_id=design.id) }}" class="mt-2">
+                        <div class="row g-2 mb-2">
+                            <div class="col-12">
+                                <select name="status" class="form-select form-select-sm" aria-label="Stage">
+                                    {% for option in statuses %}
+                                    <option value="{{ option }}" {% if option == design.status %}selected{% endif %}>{{ option }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small mb-1">Price (KES)</label>
+                                <input type="number" step="1" min="0" name="estimated_price" class="form-control form-control-sm"
+                                       value="{{ '%.0f'|format(design.estimated_price) if design.estimated_price else '' }}">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small mb-1">Ready by</label>
+                                <input type="date" name="expected_completion" class="form-control form-control-sm"
+                                       value="{{ design.expected_completion.isoformat() if design.expected_completion else '' }}">
+                            </div>
+                            <div class="col-12">
+                                <input type="text" name="note" class="form-control form-control-sm" maxlength="300"
+                                       placeholder="Note to customer (optional)" aria-label="Note to customer">
+                            </div>
+                        </div>
+                        <button class="btn btn-outline-dark btn-sm w-100">Save &amp; notify customer</button>
+                    </form>
+                </details>
+
+                {% set last = design.updates[-1] if design.updates else None %}
+                {% set wa = ("Hello " ~ design.customer.first_name ~ "! Your " ~ (design.clothing_type or "outfit") ~ " is now at: " ~ design.status ~ "." ~ ((" " ~ last.note) if last and last.note else "") ~ "\n\nFortune Needles")|whatsapp(design.customer.phone) %}
+                {% if wa %}
+                <a href="{{ wa }}" target="_blank" rel="noopener" class="btn btn-whatsapp btn-sm w-100 mt-2">
+                    <i class="bi bi-whatsapp me-1"></i> Send update on WhatsApp
+                </a>
+                {% endif %}
+
+            </div>
 
         </div>
     </div>

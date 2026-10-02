@@ -4,7 +4,7 @@ from flask_login import current_user
 from extensions import db
 from sqlalchemy import func
 
-from models import Product, Gallery, ContactMessage, AboutPage, Service, Notification, Review
+from models import Product, Gallery, ContactMessage, AboutPage, Service, Notification, Review, StockAlert
 
 public_bp = Blueprint("public", __name__)
 
@@ -54,7 +54,11 @@ def shop():
         ).filter(Review.product_id.isnot(None)).group_by(Review.product_id)
     }
 
-    return render_template("shop.html", products=products, ratings=ratings)
+    waiting_for = set()
+    if current_user.is_authenticated:
+        waiting_for = {a.product_id for a in StockAlert.query.filter_by(user_id=current_user.id, notified_at=None)}
+
+    return render_template("shop.html", products=products, ratings=ratings, waiting_for=waiting_for)
 
 
 def enquiry_product(product_id):
@@ -98,6 +102,18 @@ def contact():
         db.session.add(contact_message)
         db.session.flush()
 
+        # "Ask us when it's back" also puts them on the item's waiting list
+        if product and not product.in_stock and request.form.get("about") == "restock":
+            user_id = current_user.id if current_user.is_authenticated else None
+            already = StockAlert.query.filter_by(product_id=product.id, notified_at=None).filter(
+                (StockAlert.user_id == user_id) if user_id else (StockAlert.email == email)
+            ).first()
+            if not already:
+                db.session.add(StockAlert(product_id=product.id, user_id=user_id,
+                                          name=None if user_id else name,
+                                          email=None if user_id else email,
+                                          phone=None if user_id else phone))
+
         Notification.add(
             "message",
             "New contact message",
@@ -117,4 +133,6 @@ def contact():
                    if request.args.get("about") == "restock" or not product.in_stock
                    else f"Question about {product.name}")
 
-    return render_template("contact.html", product=product, subject=subject)
+    about = "restock" if product and not product.in_stock else ""
+
+    return render_template("contact.html", product=product, subject=subject, about=about)

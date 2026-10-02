@@ -27,6 +27,7 @@
 
                 {% if product %}
                 <input type="hidden" name="product" value="{{ product.id }}">
+                {% if about %}<input type="hidden" name="about" value="{{ about }}">{% endif %}
                 <div class="enquiry-item mb-3">
                     {% if product.image %}
                     <img src="{{ url_for('static', filename='uploads/products/' + product.image) }}" alt="{{ product.name }}">

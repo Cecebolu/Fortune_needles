@@ -120,7 +120,17 @@
                     {% endif %}
                     {% else %}
                     <button class="btn btn-secondary w-100" disabled><i class="bi bi-x-circle me-1"></i> Out of Stock</button>
+                    {% if current_user.is_authenticated and current_user.role != "admin" %}
+                    {% if product.id in waiting_for %}
+                    <small class="text-success d-block mt-2"><i class="bi bi-bell-fill me-1"></i>We'll tell you when it's back.</small>
+                    {% else %}
+                    <form method="POST" action="{{ url_for('customer.notify_me', product_id=product.id) }}" class="mt-2">
+                        <button class="btn btn-sm btn-outline-dark w-100"><i class="bi bi-bell me-1"></i> Notify me when it's back</button>
+                    </form>
+                    {% endif %}
+                    {% else %}
                     <small class="text-muted d-block mt-2">Sold out. <a href="{{ url_for('public.contact', product=product.id, about='restock') }}">Ask us when it's back</a>.</small>
+                    {% endif %}
                     {% endif %}
                     <a href="{{ url_for('public.contact', product=product.id) }}" class="small d-inline-block mt-2">Ask a question</a>
                 </div>

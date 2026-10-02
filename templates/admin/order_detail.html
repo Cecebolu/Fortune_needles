@@ -59,7 +59,13 @@
                 </a>
             </p>
             <p class="mb-1 text-muted"><i class="bi bi-telephone me-2"></i>{{ order.customer.phone }}</p>
-            <p class="mb-0 text-muted"><i class="bi bi-envelope me-2"></i>{{ order.customer.email }}</p>
+            <p class="mb-3 text-muted"><i class="bi bi-envelope me-2"></i>{{ order.customer.email }}</p>
+            {% set wa = ("Hello " ~ order.customer.first_name ~ "! Your order " ~ order.tracking_code ~ " is: " ~ order.order_status ~ " (payment: " ~ order.payment_status ~ ").\n\nFortune Needles")|whatsapp(order.customer.phone) %}
+            {% if wa %}
+            <a href="{{ wa }}" target="_blank" rel="noopener" class="btn btn-whatsapp btn-sm">
+                <i class="bi bi-whatsapp me-1"></i> Send status on WhatsApp
+            </a>
+            {% endif %}
         </div>
 
     </div>

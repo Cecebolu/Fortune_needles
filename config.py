@@ -26,3 +26,9 @@ class Config:
     MAIL_USERNAME = os.environ.get("MAIL_USERNAME")
     MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD")
     MAIL_FROM = os.environ.get("MAIL_FROM")
+
+    # Optional: SMS through Africa's Talking (https://africastalking.com).
+    # Use AT_USERNAME=sandbox while testing.
+    AT_USERNAME = os.environ.get("AT_USERNAME")
+    AT_API_KEY = os.environ.get("AT_API_KEY")
+    AT_SENDER_ID = os.environ.get("AT_SENDER_ID")

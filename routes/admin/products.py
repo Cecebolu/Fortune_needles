@@ -1,7 +1,8 @@
 from flask import render_template, request, redirect, url_for, flash
 
 from extensions import db
-from models import Product
+from models import Product, StockAlert
+from notify import notify_if_restocked
 from routes.admin import admin_bp, admin_required, save_image, delete_image
 
 
@@ -74,19 +75,25 @@ def edit_product(product_id):
 
     if request.method == "POST":
 
+        old_stock = product.stock
         fill_product_from_form(product)
 
         if not replace_product_image(product):
             flash("Image must be png, jpg, jpeg, gif or webp.", "warning")
             return redirect(url_for("admin.edit_product", product_id=product.id))
 
+        told = notify_if_restocked(product, old_stock)
         db.session.commit()
 
-        flash("Product updated successfully.", "success")
+        flash("Product updated successfully." + (f" {told} waiting customer(s) told it's back." if told else ""), "success")
 
         return redirect(url_for("admin.admin_products"))
 
-    return render_template("admin/edit_product.html", product=product)
+    waiting = StockAlert.query.filter_by(product_id=product.id).order_by(
+        StockAlert.notified_at.isnot(None), StockAlert.created_at.desc()
+    ).all()
+
+    return render_template("admin/edit_product.html", product=product, waiting=waiting)
 
 
 @admin_bp.route("/products/<int:product_id>/delete", methods=["POST"])
@@ -126,9 +133,11 @@ def toggle_product_visibility(product_id):
 def update_stock(product_id):
 
     product = db.get_or_404(Product, product_id)
+    old_stock = product.stock
     product.stock = max(request.form.get("stock", product.stock, type=int), 0)
+    told = notify_if_restocked(product, old_stock)
     db.session.commit()
 
-    flash(f"{product.name} stock set to {product.stock}.", "success")
+    flash(f"{product.name} stock set to {product.stock}." + (f" {told} waiting customer(s) told it's back." if told else ""), "success")
 
     return redirect(url_for("admin.admin_products"))

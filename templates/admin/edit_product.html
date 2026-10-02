@@ -201,4 +201,37 @@
 
 </section>
 
+<div class="admin-panel mt-4" id="waiting-list" style="max-width:900px;margin:0 auto">
+    <div class="admin-panel-header">
+        <h5><i class="bi bi-bell me-2"></i>Waiting for this item</h5>
+        {% set pending = waiting|rejectattr("notified_at")|list %}
+        <span class="badge rounded-pill text-bg-{{ 'warning' if pending else 'light' }}">{{ pending|length }} waiting</span>
+    </div>
+    <p class="text-muted small">
+        Customers who asked to be told when {{ product.name }} is back. When you raise the stock above 0,
+        everyone waiting is told automatically on the website (and by email/SMS if set up).
+    </p>
+    {% for entry in waiting %}
+    <div class="d-flex align-items-center gap-3 py-2 border-top">
+        <div class="flex-grow-1 min-w-0">
+            <strong>{{ entry.contact_name }}</strong>
+            <small class="text-muted d-block text-truncate">{{ entry.contact_phone or "" }} {{ entry.contact_email or "" }}</small>
+        </div>
+        {% if entry.notified_at %}
+        <span class="badge text-bg-success">Told {{ entry.notified_at.strftime('%d %b') }}</span>
+        {% else %}
+        <span class="badge text-bg-warning">Waiting since {{ entry.created_at.strftime('%d %b') }}</span>
+        {% endif %}
+        {% set wa = ("Hello " ~ entry.contact_name ~ "! Good news: " ~ product.name ~ " is " ~ ("back in stock" if product.in_stock else "coming soon") ~ " at Fortune Needles (KES " ~ "{:,.0f}".format(product.price) ~ ").")|whatsapp(entry.contact_phone) %}
+        {% if wa %}
+        <a href="{{ wa }}" target="_blank" rel="noopener" class="btn btn-whatsapp btn-sm" title="Send on WhatsApp">
+            <i class="bi bi-whatsapp"></i>
+        </a>
+        {% endif %}
+    </div>
+    {% else %}
+    <p class="text-muted mb-0 border-top pt-3">Nobody is waiting for this item.</p>
+    {% endfor %}
+</div>
+
 {% endblock %}

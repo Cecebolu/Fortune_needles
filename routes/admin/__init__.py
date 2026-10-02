@@ -12,7 +12,7 @@ from werkzeug.utils import secure_filename
 from sqlalchemy import and_, or_, func
 
 from extensions import db
-from models import ContactMessage, Notification
+from models import ContactMessage, Notification, DESIGN_STAGE_NAMES
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 
@@ -24,7 +24,7 @@ IMAGE_QUALITY = 80      # WebP quality (0-100)
 ORDER_STATUSES = ["Received", "In Progress", "Ready", "Delivered", "Cancelled"]
 PAYMENT_STATUSES = ["Pending", "Paid", "Refunded"]
 APPOINTMENT_STATUSES = ["Pending", "Confirmed", "Completed", "Cancelled"]
-DESIGN_STATUSES = ["Submitted", "Reviewed", "In Progress", "Completed", "Rejected"]
+DESIGN_STATUSES = DESIGN_STAGE_NAMES + ["Rejected"]
 
 
 # ==========================================
@@ -47,6 +47,13 @@ def dict_without(args, key):
     """The current query string minus one key, e.g. to clear a search but keep the status filter."""
     from urllib.parse import urlencode
     return urlencode([(k, v) for k, v in args.items(multi=True) if k != key])
+
+
+@admin_bp.app_template_filter("whatsapp")
+def whatsapp_filter(text, phone):
+    """{{ message|whatsapp(customer.phone) }} -> a wa.me link that opens WhatsApp with the message."""
+    from notify import whatsapp_url
+    return whatsapp_url(phone, text) or ""
 
 
 @admin_bp.app_template_filter("timeago")

@@ -141,6 +141,11 @@
             <div class="d-flex align-items-center gap-2">
 
                 {% if current_user.is_authenticated and current_user.role != "admin" %}
+                <a href="{{ url_for('customer.updates') }}" class="nav-cart" aria-label="My updates, {{ unread_updates }} new">
+                    <i class="bi bi-bell"></i>
+                    {% if unread_updates %}<span class="nav-cart-count nav-updates-count">{{ unread_updates }}</span>{% endif %}
+                </a>
+
                 <a href="{{ url_for('cart.view_cart') }}" class="nav-cart" aria-label="My cart, {{ cart_count }} item{{ '' if cart_count == 1 else 's' }}">
                     <i class="bi bi-cart3"></i>
                     {% if cart_count %}<span class="nav-cart-count">{{ cart_count }}</span>{% endif %}

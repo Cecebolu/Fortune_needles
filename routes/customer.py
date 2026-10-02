@@ -5,7 +5,7 @@ from flask_login import login_required, current_user
 
 from extensions import db
 from models import (Appointment, CustomDesign, Service, Notification, Product, Order, OrderItem, Review,
-                    DismissedAlert)
+                    DismissedAlert, DesignUpdate, CustomerAlert, StockAlert, DESIGN_STAGES)
 
 customer_bp = Blueprint("customer", __name__)
 
@@ -38,7 +38,8 @@ def dashboard():
         appointments=appointments,
         designs=designs,
         orders=orders,
-        alerts=dashboard_alerts(appointments, designs, orders)
+        alerts=dashboard_alerts(appointments, designs, orders),
+        stages=DESIGN_STAGES
     )
 
 
@@ -75,7 +76,7 @@ def dashboard_alerts(appointments, designs, orders):
                            link=url_for("customer.reviews"), link_text="Rate now"))
 
     for d in designs:
-        if d.estimated_price and d.status not in ("Completed", "Rejected"):
+        if d.estimated_price and d.status in ("Submitted", "Quoted"):
             ready = f"Ready by {d.expected_completion.strftime('%d %B %Y')}." if d.expected_completion else "Contact us to go ahead."
             alerts.append(dict(key=f"quote-{d.id}-{d.estimated_price:.0f}-{d.expected_completion}", style="info",
                                icon="bi-tag-fill",
@@ -187,6 +188,8 @@ def design():
         )
 
         db.session.add(custom_design)
+        db.session.flush()
+        db.session.add(DesignUpdate(design_id=custom_design.id, stage="Submitted"))
 
         Notification.add(
             "design",
@@ -298,3 +301,46 @@ def delete_review(review_id):
     flash("Review deleted.", "success")
 
     return redirect(url_for("customer.reviews"))
+
+
+# ==========================================
+# UPDATES (the customer's bell)
+# ==========================================
+
+@customer_bp.route("/updates")
+@login_required
+def updates():
+
+    alerts = CustomerAlert.query.filter_by(user_id=current_user.id).order_by(
+        CustomerAlert.created_at.desc()
+    ).limit(100).all()
+
+    unread_ids = [a.id for a in alerts if not a.is_read]
+
+    if unread_ids:
+        CustomerAlert.query.filter(CustomerAlert.id.in_(unread_ids)).update({"is_read": True}, synchronize_session=False)
+        db.session.commit()
+
+    return render_template("customer/updates.html", alerts=alerts, unread_ids=set(unread_ids))
+
+
+# ==========================================
+# BACK-IN-STOCK: "Notify me"
+# ==========================================
+
+@customer_bp.route("/shop/<int:product_id>/notify-me", methods=["POST"])
+@login_required
+def notify_me(product_id):
+
+    product = db.get_or_404(Product, product_id)
+
+    if product.in_stock:
+        flash(f"{product.name} is in stock now. Add it to your cart!", "info")
+    elif StockAlert.query.filter_by(product_id=product.id, user_id=current_user.id, notified_at=None).first():
+        flash(f"You're already on the list for {product.name}.", "info")
+    else:
+        db.session.add(StockAlert(product_id=product.id, user_id=current_user.id))
+        db.session.commit()
+        flash(f"Done! We'll let you know as soon as {product.name} is back.", "success")
+
+    return redirect(url_for("public.shop"))
