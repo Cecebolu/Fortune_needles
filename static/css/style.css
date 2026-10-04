@@ -2647,3 +2647,50 @@ a{
 .design-more summary{
     cursor:pointer;
 }
+
+/* =====================================================
+   ABOUT: FOUNDER SECTION
+===================================================== */
+
+.founder-section{
+    border-top:2px solid var(--gold);
+    padding-top:2.5rem;
+    text-align:center;
+}
+
+.founder-photo{
+    width:160px;
+    height:160px;
+    object-fit:cover;
+    border-radius:50%;
+    border:3px solid var(--gold);
+    margin-bottom:1.25rem;
+}
+
+.founder-name{
+    color:var(--gold-dark);
+    font-weight:600;
+    letter-spacing:.03em;
+    margin-bottom:1.5rem;
+}
+
+.founder-section strong{
+    color:var(--gold-dark);
+}
+
+/* =====================================================
+   ADMIN: STAFF PERMISSIONS
+===================================================== */
+
+.permission-group{
+    margin-bottom:.4rem;
+}
+
+.permission-group-label{
+    display:block;
+    font-size:.75rem;
+    font-weight:600;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    color:var(--gold-dark);
+}

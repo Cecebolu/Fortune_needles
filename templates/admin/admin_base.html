@@ -49,6 +49,9 @@
     ("Insights", [
         ("admin.admin_reports", "bi-graph-up-arrow", "Reports"),
     ]),
+    ("Settings", [
+        ("admin.admin_staff", "bi-person-gear", "Staff & Permissions"),
+    ]),
 ] %}
 
 {% set active_endpoint = {
@@ -78,7 +81,9 @@
                     data-bs-dismiss="offcanvas" data-bs-target="#adminSidebar" aria-label="Close menu"></button>
         </div>
 
-        {% for section, links in menu %}
+        {% for section, all_links in menu %}
+        {% set links = all_links|selectattr(0, "can_open")|list %}
+        {% if links %}
         <p class="admin-menu-label">{{ section }}</p>
         <ul>
             {% for endpoint, icon, label in links %}
@@ -97,6 +102,7 @@
             </li>
             {% endfor %}
         </ul>
+        {% endif %}
         {% endfor %}
 
         <ul class="admin-sidebar-footer">
@@ -232,6 +238,7 @@ document.querySelectorAll("form[data-live-search]").forEach(function (form) {
 <div class="toast-container position-fixed bottom-0 end-0 p-3 js-toasts"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/show-password.js') }}" defer></script>
 
 <script>
 (function () {

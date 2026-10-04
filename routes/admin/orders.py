@@ -3,11 +3,11 @@ from flask import render_template, request, redirect, url_for, flash
 from extensions import db
 from models import User, Product, Order, OrderItem
 from notify import alert_customer, notify_if_restocked
-from routes.admin import admin_bp, admin_required, form_date, search_condition, ORDER_STATUSES, PAYMENT_STATUSES
+from routes.admin import admin_bp, section_required, form_date, search_condition, ORDER_STATUSES, PAYMENT_STATUSES
 
 
 @admin_bp.route("/orders")
-@admin_required
+@section_required("shop")
 def admin_orders():
 
     status = request.args.get("status")
@@ -37,7 +37,7 @@ def admin_orders():
 
 
 @admin_bp.route("/orders/new", methods=["GET", "POST"])
-@admin_required
+@section_required("shop")
 def add_order():
 
     customers = User.query.filter_by(role="customer").order_by(User.first_name, User.last_name).all()
@@ -111,7 +111,7 @@ def add_order():
 
 
 @admin_bp.route("/orders/<int:order_id>", methods=["GET", "POST"])
-@admin_required
+@section_required("shop")
 def order_detail(order_id):
 
     order = db.get_or_404(Order, order_id)
@@ -170,7 +170,7 @@ def order_detail(order_id):
 
 
 @admin_bp.route("/orders/<int:order_id>/delete", methods=["POST"])
-@admin_required
+@section_required("shop")
 def delete_order(order_id):
 
     order = db.get_or_404(Order, order_id)

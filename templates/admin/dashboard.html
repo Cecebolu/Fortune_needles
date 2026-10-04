@@ -20,7 +20,7 @@
         (total_appointments, "Appointments", "bi-calendar-check-fill", "admin.admin_appointments"),
         (total_designs, "Design Requests", "bi-scissors", "admin.admin_designs"),
         (total_products, "Products", "bi-bag-fill", "admin.admin_products"),
-    ] %}
+    ] if can_open(endpoint) %}
     <div class="col-sm-6 col-xl-3">
         <a href="{{ url_for(endpoint) }}" class="stat-card">
             <div class="stat-icon"><i class="bi {{ icon }}"></i></div>
@@ -38,29 +38,38 @@
 <h4 class="admin-section-title">Quick Actions</h4>
 
 <div class="row g-3 mb-5">
+    {% if can_open('admin.add_product') %}
     <div class="col-sm-6 col-xl-3">
         <a href="{{ url_for('admin.add_product') }}" class="quick-action">
             <i class="bi bi-plus-circle"></i> Add Product
         </a>
     </div>
+    {% endif %}
+    {% if can_open('admin.add_gallery') %}
     <div class="col-sm-6 col-xl-3">
         <a href="{{ url_for('admin.add_gallery') }}" class="quick-action">
             <i class="bi bi-image"></i> Upload Gallery Image
         </a>
     </div>
+    {% endif %}
+    {% if can_open('admin.admin_about') %}
     <div class="col-sm-6 col-xl-3">
         <a href="{{ url_for('admin.admin_about') }}" class="quick-action">
             <i class="bi bi-pencil-square"></i> Edit About Page
         </a>
     </div>
+    {% endif %}
+    {% if can_open('admin.admin_appointments') %}
     <div class="col-sm-6 col-xl-3">
         <a href="{{ url_for('admin.admin_appointments') }}" class="quick-action">
             <i class="bi bi-calendar-week"></i> View Appointments
         </a>
     </div>
+    {% endif %}
 </div>
 
 <!-- Recent Activity -->
+{% if can_open("admin.admin_appointments") %}
 <div class="row g-4">
 
     <div class="col-xl-7">
@@ -129,5 +138,6 @@
     </div>
 
 </div>
+{% endif %}
 
 {% endblock %}

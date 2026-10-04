@@ -6,7 +6,7 @@ from sqlalchemy import func
 
 from extensions import db
 from models import User, Order, OrderItem, Product, Appointment, CustomDesign
-from routes.admin import admin_bp, admin_required, ORDER_STATUSES, APPOINTMENT_STATUSES
+from routes.admin import admin_bp, section_required, ORDER_STATUSES, APPOINTMENT_STATUSES
 
 
 def month_starts(count):
@@ -26,7 +26,7 @@ def month_starts(count):
 
 
 @admin_bp.route("/reports")
-@admin_required
+@section_required("reports")
 def admin_reports():
 
     months_back = request.args.get("months", 6, type=int)

@@ -20,6 +20,26 @@
             <p class="fs-5">{{ paragraph.strip() }}</p>
             {% endfor %}
 
+            {% if about.founder_story %}
+            <div class="founder-section mt-5">
+                {% if about.founder_photo %}
+                <img src="{{ url_for('static', filename='uploads/about/' + about.founder_photo) }}"
+                     alt="{{ about.founder_name or 'Founder' }}" class="founder-photo">
+                {% endif %}
+
+                {% if about.founder_heading %}
+                <h2 class="fw-bold">{{ about.founder_heading }}</h2>
+                {% endif %}
+                {% if about.founder_name %}
+                <p class="founder-name">{{ about.founder_name }}</p>
+                {% endif %}
+
+                {% for paragraph in about.founder_story.split("\n\n") if paragraph.strip() %}
+                <p class="fs-5">{{ paragraph.strip() | bold }}</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+
             <div class="text-center mt-5">
                 <a href="{{ url_for('public.services') }}" class="btn btn-gold me-2">
                     Our Services
@@ -32,7 +52,7 @@
         </div>
     </div>
 
-    {% if current_user.is_authenticated and current_user.role == "admin" %}
+    {% if can_open("admin.admin_about") %}
     <div class="text-center mt-4">
         <a href="{{ url_for('admin.admin_about') }}" class="btn btn-sm btn-dark">
             <i class="bi bi-pencil-square me-1"></i>Edit this page

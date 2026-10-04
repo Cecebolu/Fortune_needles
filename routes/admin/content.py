@@ -2,7 +2,7 @@ from flask import render_template, request, redirect, url_for, flash
 
 from extensions import db
 from models import AboutPage, Service, Gallery, SiteSettings, ContactMessage
-from routes.admin import admin_bp, admin_required, save_image, delete_image, form_float
+from routes.admin import admin_bp, section_required, save_image, delete_image, form_float
 
 SERVICE_ICONS = [
     "bi-scissors", "bi-rulers", "bi-gem", "bi-palette", "bi-person-standing-dress",
@@ -21,7 +21,7 @@ def clean(name):
 # ==========================================
 
 @admin_bp.route("/home", methods=["GET", "POST"])
-@admin_required
+@section_required("home")
 def admin_home():
 
     settings = SiteSettings.get()
@@ -47,7 +47,7 @@ def admin_home():
 # ==========================================
 
 @admin_bp.route("/about", methods=["GET", "POST"])
-@admin_required
+@section_required("about")
 def admin_about():
 
     about = AboutPage.get()
@@ -57,6 +57,23 @@ def admin_about():
         about.title = request.form.get("title")
         about.subtitle = request.form.get("subtitle")
         about.description = (request.form.get("description") or "").replace("\r\n", "\n")
+
+        about.founder_heading = clean("founder_heading")
+        about.founder_name = clean("founder_name")
+        about.founder_story = clean("founder_story").replace("\r\n", "\n")
+
+        photo = request.files.get("founder_photo")
+
+        if photo and photo.filename:
+            filename = save_image(photo, "about")
+            if filename:
+                delete_image(about.founder_photo, "about")
+                about.founder_photo = filename
+            else:
+                flash("Photo skipped: only png, jpg, jpeg, gif or webp allowed.", "warning")
+        elif request.form.get("remove_founder_photo") == "on":
+            delete_image(about.founder_photo, "about")
+            about.founder_photo = None
 
         db.session.commit()
 
@@ -81,7 +98,7 @@ def fill_service_from_form(service):
 
 
 @admin_bp.route("/services", methods=["GET", "POST"])
-@admin_required
+@section_required("services")
 def admin_services():
 
     Service.active()  # creates the starter services the first time
@@ -111,13 +128,13 @@ def admin_services():
 
 
 @admin_bp.route("/services/add")
-@admin_required
+@section_required("services")
 def add_service():
     return redirect(url_for("admin.admin_services") + "#add-service")
 
 
 @admin_bp.route("/services/<int:service_id>/edit", methods=["POST"])
-@admin_required
+@section_required("services")
 def edit_service(service_id):
 
     service = db.get_or_404(Service, service_id)
@@ -136,7 +153,7 @@ def edit_service(service_id):
 
 
 @admin_bp.route("/services/<int:service_id>/move/<direction>", methods=["POST"])
-@admin_required
+@section_required("services")
 def move_service(service_id, direction):
 
     services = Service.query.order_by(Service.position, Service.id).all()
@@ -153,7 +170,7 @@ def move_service(service_id, direction):
 
 
 @admin_bp.route("/services/<int:service_id>/delete", methods=["POST"])
-@admin_required
+@section_required("services")
 def delete_service(service_id):
 
     service = db.get_or_404(Service, service_id)
@@ -171,7 +188,7 @@ def delete_service(service_id):
 # ==========================================
 
 @admin_bp.route("/gallery", methods=["GET", "POST"])
-@admin_required
+@section_required("gallery")
 def add_gallery():
 
     if request.method == "POST":
@@ -215,7 +232,7 @@ def add_gallery():
 
 
 @admin_bp.route("/gallery/<int:image_id>/delete", methods=["POST"])
-@admin_required
+@section_required("gallery")
 def delete_gallery(image_id):
 
     item = db.get_or_404(Gallery, image_id)
@@ -234,7 +251,7 @@ def delete_gallery(image_id):
 # ==========================================
 
 @admin_bp.route("/contact", methods=["GET", "POST"])
-@admin_required
+@section_required("contact")
 def admin_contact():
 
     settings = SiteSettings.get()
@@ -263,7 +280,7 @@ def admin_contact():
 # ==========================================
 
 @admin_bp.route("/messages")
-@admin_required
+@section_required("messages")
 def admin_messages():
 
     show = request.args.get("show", "all")
@@ -290,7 +307,7 @@ def admin_messages():
 
 
 @admin_bp.route("/messages/<int:message_id>/unread", methods=["POST"])
-@admin_required
+@section_required("messages")
 def mark_message_unread(message_id):
 
     message = db.get_or_404(ContactMessage, message_id)
@@ -301,7 +318,7 @@ def mark_message_unread(message_id):
 
 
 @admin_bp.route("/messages/<int:message_id>/delete", methods=["POST"])
-@admin_required
+@section_required("messages")
 def delete_message(message_id):
 
     message = db.get_or_404(ContactMessage, message_id)

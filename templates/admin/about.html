@@ -12,7 +12,7 @@
 
     <div class="card shadow-sm border-0 p-4">
 
-        <form method="POST">
+        <form method="POST" enctype="multipart/form-data">
 
             <div class="mb-3">
                 <label class="form-label">
@@ -57,6 +57,46 @@
             <small class="text-muted d-block mb-3">
                 Leave an empty line between paragraphs.
             </small>
+
+            <hr class="my-4">
+
+            <h5 class="fw-bold mb-3">Founder Section</h5>
+
+            <div class="mb-3">
+                <label class="form-label">Section Heading</label>
+                <input type="text" name="founder_heading" class="form-control"
+                       value="{{ about.founder_heading or '' }}">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Name &amp; Role</label>
+                <input type="text" name="founder_name" class="form-control"
+                       value="{{ about.founder_name or '' }}">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Story</label>
+                <textarea name="founder_story" class="form-control" rows="8">{{ about.founder_story or '' }}</textarea>
+                <small class="text-muted d-block mt-1">
+                    Leave an empty line between paragraphs. Wrap words in **double stars** to make them bold.
+                    Leave the story empty to hide this section.
+                </small>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Photo</label>
+                {% if about.founder_photo %}
+                <div class="d-flex align-items-center gap-3 mb-2">
+                    <img src="{{ url_for('static', filename='uploads/about/' + about.founder_photo) }}"
+                         alt="Founder photo" class="rounded" style="width:80px;height:80px;object-fit:cover;">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="remove_founder_photo" id="remove_founder_photo">
+                        <label class="form-check-label" for="remove_founder_photo">Remove photo</label>
+                    </div>
+                </div>
+                {% endif %}
+                <input type="file" name="founder_photo" class="form-control" accept="image/*">
+            </div>
 
             <button
                 type="submit"

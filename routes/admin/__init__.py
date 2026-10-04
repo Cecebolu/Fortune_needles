@@ -75,6 +75,7 @@ def timeago(moment):
 
 
 def admin_required(view):
+    """Any admin account: the owner or a staff member."""
 
     @wraps(view)
     @login_required
@@ -86,6 +87,54 @@ def admin_required(view):
         return view(*args, **kwargs)
 
     return wrapped
+
+
+# view name -> the section it belongs to, so menus can hide links a staff member can't open
+VIEW_SECTIONS = {}
+
+OWNER_ONLY = "owner"
+
+
+def section_required(section):
+    """Staff need `section` ticked on their account; the owner can always open it."""
+
+    def decorator(view):
+
+        VIEW_SECTIONS[view.__name__] = section
+
+        @wraps(view)
+        @login_required
+        def wrapped(*args, **kwargs):
+
+            allowed = current_user.is_owner if section == OWNER_ONLY else current_user.can(section)
+
+            if current_user.role != "admin" or not allowed:
+                abort(403)
+
+            return view(*args, **kwargs)
+
+        return wrapped
+
+    return decorator
+
+
+owner_required = section_required(OWNER_ONLY)
+
+
+@admin_bp.app_template_global()
+@admin_bp.app_template_test("can_open")
+def can_open(endpoint):
+    """{% if can_open('admin.admin_orders') %} - whether the current admin may open that page."""
+
+    if not current_user.is_authenticated or current_user.role != "admin":
+        return False
+
+    section = VIEW_SECTIONS.get(endpoint.split(".")[-1])
+
+    if section == OWNER_ONLY:
+        return current_user.is_owner
+
+    return current_user.can(section)
 
 
 def save_image(file, subfolder):
@@ -187,4 +236,4 @@ def form_float(name):
 
 # Register the admin pages (imported last so they can use the helpers above)
 from routes.admin import (dashboard, products, orders, customers, bookings, reviews,  # noqa: E402,F401
-                          content, reports, notifications)
+                          content, reports, notifications, staff)

@@ -3,11 +3,11 @@ from sqlalchemy import func
 
 from extensions import db
 from models import Review
-from routes.admin import admin_bp, admin_required
+from routes.admin import admin_bp, section_required
 
 
 @admin_bp.route("/reviews")
-@admin_required
+@section_required("shop")
 def admin_reviews():
 
     rating = request.args.get("rating", type=int)
@@ -31,7 +31,7 @@ def admin_reviews():
 
 
 @admin_bp.route("/reviews/<int:review_id>/delete", methods=["POST"])
-@admin_required
+@section_required("shop")
 def delete_review(review_id):
 
     review = db.get_or_404(Review, review_id)

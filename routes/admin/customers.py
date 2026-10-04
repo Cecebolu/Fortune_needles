@@ -4,7 +4,7 @@ from flask import render_template, request, redirect, url_for, flash, session
 
 from extensions import db
 from models import User, Measurement
-from routes.admin import admin_bp, admin_required, form_float, search_condition
+from routes.admin import admin_bp, section_required, form_float, search_condition
 from utils import make_reset_token, whatsapp_digits, RESET_LINK_HOURS
 
 MEASUREMENT_FIELDS = [
@@ -38,7 +38,7 @@ def search_customers(search):
 # ==========================================
 
 @admin_bp.route("/customers")
-@admin_required
+@section_required("customers")
 def admin_customers():
 
     search = (request.args.get("q") or "").strip()
@@ -51,7 +51,7 @@ def admin_customers():
 
 
 @admin_bp.route("/customers/<int:user_id>")
-@admin_required
+@section_required("customers")
 def customer_detail(user_id):
 
     customer = db.get_or_404(User, user_id)
@@ -79,7 +79,7 @@ def customer_detail(user_id):
 
 
 @admin_bp.route("/customers/<int:user_id>/reset-link", methods=["POST"])
-@admin_required
+@section_required("customers")
 def create_reset_link(user_id):
 
     customer = db.get_or_404(User, user_id)
@@ -99,7 +99,7 @@ def create_reset_link(user_id):
 # ==========================================
 
 @admin_bp.route("/measurements")
-@admin_required
+@section_required("customers")
 def admin_measurements():
 
     search = (request.args.get("q") or "").strip()
@@ -113,7 +113,7 @@ def admin_measurements():
 
 
 @admin_bp.route("/customers/<int:user_id>/measurements", methods=["POST"])
-@admin_required
+@section_required("customers")
 def save_measurements(user_id):
 
     customer = db.get_or_404(User, user_id)

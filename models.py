@@ -16,6 +16,23 @@ def load_user(user_id):
 # USER MODEL
 # =====================================================
 
+# permission key -> (group on the Staff page, name, what it covers)
+ADMIN_SECTIONS = {
+    "shop": ("Shop", "Shop", "products, orders, reviews"),
+    "customers": ("Customers", "Customers", "customers, appointments, design requests, measurements"),
+    "home": ("Website", "Home page", ""),
+    "about": ("Website", "About page", ""),
+    "services": ("Website", "Services", ""),
+    "gallery": ("Website", "Gallery", ""),
+    "contact": ("Website", "Contact info", ""),
+    "messages": ("Website", "Messages", "contact form messages"),
+    "reports": ("Insights", "Reports", ""),
+}
+
+# Older accounts stored one "website" permission for all website pages
+OLD_WEBSITE_SECTIONS = ["home", "about", "services", "gallery", "contact", "messages"]
+
+
 class User(UserMixin, db.Model):
     __tablename__ = "users"
 
@@ -31,6 +48,10 @@ class User(UserMixin, db.Model):
     password_hash= db.Column(db.String(255), nullable=False)
 
     role = db.Column(db.String(20), default="customer")
+
+    # Admin accounts only: the owner can do everything; staff only open the sections in `permissions`
+    is_owner = db.Column(db.Boolean, default=False)
+    permissions = db.Column(db.String(100), default="")
 
     profile_picture = db.Column(
         db.String(255),
@@ -49,6 +70,18 @@ class User(UserMixin, db.Model):
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+
+    # ---------------- ADMIN PERMISSIONS ----------------
+
+    @property
+    def sections(self):
+        return [s for s in (self.permissions or "").split(",") if s in ADMIN_SECTIONS]
+
+    def can(self, section):
+        """Whether this admin may open a section of the admin panel (None = open to every admin)."""
+        if self.role != "admin":
+            return False
+        return self.is_owner or section is None or section in self.sections
 
     # ---------------- RELATIONSHIPS ----------------
 
@@ -615,6 +648,20 @@ class ChatMessage(db.Model):
 # ABOUT PAGE CONTENT
 # =====================================================
 
+FOUNDER_DEFAULTS = {
+    "founder_heading": "The Woman Behind the Needle",
+    "founder_name": "Angy — Founder of Fortune Needles",
+    "founder_story": (
+        "Inspired by the art of tailoring and the beauty of individual expression, "
+        "Angy founded Fortune Needles with one purpose: **to make every stitch count.**\n\n"
+        "Her vision is rooted in refined craftsmanship, distinctive design, "
+        "and clothing that gives every wearer a sense of confidence.\n\n"
+        "At Fortune Needles, fashion is carefully crafted — one detail, one stitch, "
+        "and one story at a time."
+    ),
+}
+
+
 class AboutPage(db.Model):
     __tablename__ = "about_page"
 
@@ -638,6 +685,11 @@ class AboutPage(db.Model):
             "and offer alterations that give every garment a perfect fit."
         )
     )
+
+    founder_heading = db.Column(db.String(150), default=FOUNDER_DEFAULTS["founder_heading"])
+    founder_name = db.Column(db.String(150), default=FOUNDER_DEFAULTS["founder_name"])
+    founder_story = db.Column(db.Text, default=FOUNDER_DEFAULTS["founder_story"])
+    founder_photo = db.Column(db.String(255))
 
     updated_at = db.Column(
         db.DateTime,

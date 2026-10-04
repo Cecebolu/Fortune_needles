@@ -5,7 +5,7 @@ from flask import render_template, request, redirect, url_for, flash
 from extensions import db
 from models import Appointment, CustomDesign, DesignUpdate, DESIGN_STAGES
 from notify import alert_customer
-from routes.admin import (admin_bp, admin_required, form_date, form_float,
+from routes.admin import (admin_bp, section_required, form_date, form_float,
                           APPOINTMENT_STATUSES, DESIGN_STATUSES)
 
 
@@ -14,7 +14,7 @@ from routes.admin import (admin_bp, admin_required, form_date, form_float,
 # ==========================================
 
 @admin_bp.route("/appointments")
-@admin_required
+@section_required("customers")
 def admin_appointments():
 
     status = request.args.get("status")
@@ -46,7 +46,7 @@ def admin_appointments():
 
 
 @admin_bp.route("/appointments/<int:appointment_id>/status", methods=["POST"])
-@admin_required
+@section_required("customers")
 def update_appointment(appointment_id):
 
     appointment = db.get_or_404(Appointment, appointment_id)
@@ -77,7 +77,7 @@ def update_appointment(appointment_id):
 # ==========================================
 
 @admin_bp.route("/designs")
-@admin_required
+@section_required("customers")
 def admin_designs():
 
     status = request.args.get("status")
@@ -122,7 +122,7 @@ def move_design(design, stage, note):
 
 
 @admin_bp.route("/designs/<int:design_id>", methods=["POST"])
-@admin_required
+@section_required("customers")
 def update_design(design_id):
 
     design = db.get_or_404(CustomDesign, design_id)
@@ -144,7 +144,7 @@ def update_design(design_id):
 
 
 @admin_bp.route("/designs/<int:design_id>/next", methods=["POST"])
-@admin_required
+@section_required("customers")
 def advance_design(design_id):
 
     design = db.get_or_404(CustomDesign, design_id)

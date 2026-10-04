@@ -3,7 +3,7 @@ from flask import render_template, request, redirect, url_for, flash
 from extensions import db
 from models import Product, StockAlert
 from notify import notify_if_restocked
-from routes.admin import admin_bp, admin_required, save_image, delete_image
+from routes.admin import admin_bp, section_required, save_image, delete_image
 
 
 def fill_product_from_form(product):
@@ -36,7 +36,7 @@ def replace_product_image(product):
 
 
 @admin_bp.route("/products")
-@admin_required
+@section_required("shop")
 def admin_products():
 
     products = Product.query.order_by(Product.created_at.desc()).all()
@@ -45,7 +45,7 @@ def admin_products():
 
 
 @admin_bp.route("/products/add", methods=["GET", "POST"])
-@admin_required
+@section_required("shop")
 def add_product():
 
     if request.method == "POST":
@@ -68,7 +68,7 @@ def add_product():
 
 
 @admin_bp.route("/products/<int:product_id>/edit", methods=["GET", "POST"])
-@admin_required
+@section_required("shop")
 def edit_product(product_id):
 
     product = db.get_or_404(Product, product_id)
@@ -97,7 +97,7 @@ def edit_product(product_id):
 
 
 @admin_bp.route("/products/<int:product_id>/delete", methods=["POST"])
-@admin_required
+@section_required("shop")
 def delete_product(product_id):
 
     product = db.get_or_404(Product, product_id)
@@ -116,7 +116,7 @@ def delete_product(product_id):
 
 
 @admin_bp.route("/products/<int:product_id>/visibility", methods=["POST"])
-@admin_required
+@section_required("shop")
 def toggle_product_visibility(product_id):
 
     product = db.get_or_404(Product, product_id)
@@ -129,7 +129,7 @@ def toggle_product_visibility(product_id):
 
 
 @admin_bp.route("/products/<int:product_id>/stock", methods=["POST"])
-@admin_required
+@section_required("shop")
 def update_stock(product_id):
 
     product = db.get_or_404(Product, product_id)
